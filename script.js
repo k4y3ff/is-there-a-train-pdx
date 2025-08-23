@@ -23,8 +23,8 @@ class TrainStatusApp {
     
     initMap() {
         // Initialize the map centered on NW 9th & Naito intersection
-        // Coordinates: 45.5275, -122.6731 (NW 9th Ave & NW Naito Pkwy, Portland, OR)
-        this.map = L.map('map').setView([45.5275, -122.6731], 16);
+        // Coordinates: [45.532533, -122.680120] (NW 9th Ave & NW Naito Pkwy, Portland, OR)
+        this.map = L.map('map').setView([45.532533, -122.680120], 16);
         
         // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -58,12 +58,12 @@ class TrainStatusApp {
                 <div class="status-dot" id="statusDot"></div>
                 <div class="status-label" id="statusLabel">Checking...</div>
             `,
-            iconSize: [120, 80],
-            iconAnchor: [60, 40]
+            iconSize: [80, 60],
+            iconAnchor: [40, 30]
         });
         
         // Add the status dot as a map overlay
-        this.statusDotMarker = L.marker([45.5275, -122.6731], {
+        this.statusDotMarker = L.marker([45.532533, -122.680120], {
             icon: this.statusDotOverlay,
             interactive: false
         }).addTo(this.map);
@@ -186,8 +186,8 @@ class TrainStatusApp {
                     <div class="status-dot ${status}" style="background: ${dotColor}; transform: scale(1.1);"></div>
                     <div class="status-label">${text}</div>
                 `,
-                iconSize: [120, 80],
-                iconAnchor: [60, 40]
+                iconSize: [80, 60],
+                iconAnchor: [40, 30]
             }));
             
             // Reset the scale after animation
@@ -199,8 +199,8 @@ class TrainStatusApp {
                             <div class="status-dot ${status}" style="background: ${dotColor}; transform: scale(1);"></div>
                             <div class="status-label">${text}</div>
                         `,
-                        iconSize: [120, 80],
-                        iconAnchor: [60, 40]
+                        iconSize: [80, 60],
+                        iconAnchor: [40, 30]
                     }));
                 }
             }, 200);

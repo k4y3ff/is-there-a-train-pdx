@@ -99,6 +99,27 @@ To monitor a different intersection, update the location in:
 - `script.js` - Modify the coordinates in `initMap()` function
 - `script.js` - Update the `simulateTrainDetection()` function
 
+### Adjusting Intersection Coordinates
+
+If the status dot isn't positioned correctly over the intersection:
+
+1. **Use the Coordinate Finder**: Click the "🗺️ Find Exact Coordinates" link in the navigation
+2. **Navigate to the intersection**: Use the search box or manually navigate to NW 9th Ave & NW Naito Pkwy
+3. **Click on the exact intersection**: Click precisely where the roads meet to get the coordinates
+4. **Update the coordinates**: Copy the coordinates and update them in `script.js`:
+
+```javascript
+// In the initMap() function, update these coordinates:
+this.map = L.map('map').setView([NEW_LAT, NEW_LNG], 16);
+
+// Update all marker positions:
+this.statusMarker = L.marker([NEW_LAT, NEW_LNG], { ... });
+L.marker([NEW_LAT, NEW_LNG], { ... }); // intersection label
+this.statusDotMarker = L.marker([NEW_LAT, NEW_LNG], { ... });
+```
+
+**Current coordinates**: [45.5275, -122.6731] - These may need adjustment for perfect accuracy.
+
 ### Integrating Real Data
 
 Replace the `simulateTrainDetection()` function in `script.js` with actual API calls:
