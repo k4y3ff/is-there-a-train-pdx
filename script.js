@@ -74,8 +74,38 @@ class TrainStatusApp {
         // Add click handler to refresh status
         this.map.on('click', () => this.checkTrainStatus());
         
+        // Force map to resize after initialization to ensure proper height
+        setTimeout(() => {
+            this.map.invalidateSize();
+            console.log('🗺️ Map resized, current dimensions:', {
+                containerHeight: document.querySelector('.map-container').offsetHeight,
+                mapHeight: document.querySelector('#map').offsetHeight,
+                mapElement: document.querySelector('#map').style.height
+            });
+            
+            // If the map still doesn't have the right height, force it
+            if (document.querySelector('#map').offsetHeight < 600) {
+                console.log('🔄 Forcing map height to 600px...');
+                this.forceMapHeight();
+            }
+        }, 100);
+        
         // Initialize MAX train overlay
         this.initMaxTrains();
+    }
+    
+    forceMapHeight() {
+        const mapElement = document.querySelector('#map');
+        const container = document.querySelector('.map-container');
+        
+        // Force the heights
+        mapElement.style.height = '600px';
+        container.style.height = '600px';
+        
+        // Invalidate the map size again
+        this.map.invalidateSize();
+        
+        console.log('✅ Map height forced to 600px');
     }
     
     initMaxTrains() {
