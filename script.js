@@ -16,7 +16,8 @@ class TrainStatusApp {
     
     init() {
         this.initMap();
-        this.checkTrainStatus();
+        // Initial train status check with CCTV analysis
+        setTimeout(() => this.checkTrainStatus(), 2000); // Wait for map to load first
         // Check status every 30 seconds
         setInterval(() => this.checkTrainStatus(), 30000);
         
@@ -40,9 +41,9 @@ class TrainStatusApp {
         this.se12thClintonMarker = L.marker([45.503373, -122.653787], {
             icon: L.divIcon({
                 className: 'intersection-marker',
-                html: '<div style="background: #046A38; width: 60px; height: 60px; border-radius: 0%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 42px;">📷</div>',
-                iconSize: [60, 60],
-                iconAnchor: [30, 30]
+                html: '<div style="background: #046A38; width: 45px; height: 45px; border-radius: 0%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>',
+                iconSize: [45, 45],
+                iconAnchor: [22.5, 22.5]
             })
         }).addTo(this.map);
         
@@ -495,8 +496,10 @@ class TrainStatusApp {
             </div>
         `;
         
-        // Load the CCTV camera feed
+        // Load the CCTV camera feed and check for trains
         this.loadCCTVFeed();
+        // Also check train status when modal opens
+        setTimeout(() => this.checkTrainStatus(), 1000);
     }
     
 
@@ -516,10 +519,10 @@ class TrainStatusApp {
                              alt="Portland - 12th at Clinton CCTV Camera" 
                              class="cctv-image"
                              onerror="this.parentElement.innerHTML='<div class=\'cctv-error\'>Camera feed unavailable</div>'"
-                             onload="this.parentElement.querySelector('.cctv-loading')?.remove()">
+                             onload="this.parentElement.querySelector('.cctv-loading')?.remove(); window.trainApp.checkTrainStatus();">
                         <div class="cctv-loading">Loading camera feed...</div>
                         <div class="cctv-info">
-                            <p><strong>Camera 214:</strong> Portland - 12th at Clinton</p>
+                            <p><strong>Camera:</strong> Portland - 12th at Clinton</p>
                             <p><em>Live traffic camera feed from TripCheck</em></p>
                         </div>
                     </div>
@@ -621,12 +624,8 @@ class TrainStatusApp {
             // Show checking state
             this.setStatus('checking', 'Checking...');
             
-            // In a real app, this would call actual APIs or services to determine train status
-            // For demo purposes, we'll simulate checking for trains
-            await this.delay(1000); // Simulate API call delay
-            
-            // Simulate checking if there's a train (this would be real data in production)
-            const hasTrain = Math.random() > 0.7; // 30% chance of train for demo
+            // Analyze the CCTV camera feed to detect trains
+            const hasTrain = await this.analyzeCCTVForTrains();
             
             if (hasTrain) {
                 this.setStatus('blocked', 'TRAIN BLOCKING');
@@ -642,6 +641,98 @@ class TrainStatusApp {
         }
     }
     
+    async analyzeCCTVForTrains() {
+        try {
+            console.log('🔍 Analyzing CCTV feed for train detection...');
+            
+            // Create a canvas to analyze the camera image
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            // Set up canvas dimensions
+            canvas.width = 640;
+            canvas.height = 480;
+            
+            // Load the camera image
+            const tripCheckUrl = 'https://tripcheck.com/RoadCams/cams/12th%20at%20Clinton_pid3177.JPG';
+            
+            return new Promise((resolve, reject) => {
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    try {
+                        // Draw the image to canvas
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        // Get image data for analysis
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const data = imageData.data;
+                        
+                        // Simple train detection algorithm
+                        // This analyzes pixel patterns that might indicate a train
+                        const trainDetected = this.detectTrainInImage(data, canvas.width, canvas.height);
+                        
+                        console.log('🚂 Train detection result:', trainDetected ? 'TRAIN FOUND' : 'NO TRAIN');
+                        resolve(trainDetected);
+                        
+                    } catch (error) {
+                        console.error('Error analyzing image data:', error);
+                        resolve(false); // Default to no train if analysis fails
+                    }
+                };
+                
+                img.onerror = () => {
+                    console.warn('⚠️ Could not load camera image for analysis');
+                    resolve(false); // Default to no train if image fails to load
+                };
+                
+                // Add timestamp to prevent caching
+                img.src = `${tripCheckUrl}?t=${Date.now()}`;
+            });
+            
+        } catch (error) {
+            console.error('❌ Error in CCTV analysis:', error);
+            return false; // Default to no train if analysis fails
+        }
+    }
+    
+    detectTrainInImage(imageData, width, height) {
+        try {
+            // This is a simplified train detection algorithm
+            // In a production app, you would use a proper computer vision model
+            
+            let darkPixelCount = 0;
+            let totalPixels = width * height;
+            
+            // Count dark pixels (potential train objects)
+            for (let i = 0; i < imageData.length; i += 4) {
+                const r = imageData[i];
+                const g = imageData[i + 1];
+                const b = imageData[i + 2];
+                
+                // Check if pixel is dark (potential train)
+                if (r < 100 && g < 100 && b < 100) {
+                    darkPixelCount++;
+                }
+            }
+            
+            // Calculate percentage of dark pixels
+            const darkPixelPercentage = (darkPixelCount / totalPixels) * 100;
+            
+            // If more than 15% of pixels are dark, it might indicate a train
+            // This is a very basic heuristic and would need refinement
+            const trainThreshold = 15;
+            
+            console.log(`📊 Image analysis: ${darkPixelPercentage.toFixed(2)}% dark pixels (threshold: ${trainThreshold}%)`);
+            
+            return darkPixelPercentage > trainThreshold;
+            
+        } catch (error) {
+            console.error('Error in train detection algorithm:', error);
+            return false;
+        }
+    }
+    
     setStatus(status, text) {
         // Get the status dot element from the map overlay
         const statusDot = document.querySelector('.status-dot-overlay .status-dot');
@@ -654,30 +745,25 @@ class TrainStatusApp {
             statusDot.classList.add(status);
         }
         
-        // Update marker color and emoji based on status for the SE 12th & Clinton intersection
+        // Update marker color based on status for the SE 12th & Clinton intersection
         if (this.se12thClintonMarker) {
             let markerColor = '#6b7280'; // default gray for unknown
-            let emoji = '📷'; // camera emoji for unknown/clear
             
             if (status === 'blocked') {
                 markerColor = '#dc2626'; // red
-                emoji = '🚂'; // train emoji for blocked
             } else if (status === 'clear') {
                 markerColor = '#046A38'; // green
-                emoji = '📷'; // camera emoji for clear
             } else if (status === 'checking') {
                 markerColor = '#FFB81C'; // yellow
-                emoji = '⏳'; // hourglass emoji for checking
             } else if (status === 'error') {
                 markerColor = '#dc2626'; // red for errors
-                emoji = '❌'; // error emoji for errors
             }
             
             this.se12thClintonMarker.setIcon(L.divIcon({
                 className: 'intersection-marker',
-                html: `<div style="background: ${markerColor}; width: 60px; height: 60px; border-radius: 0%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 42px;">${emoji}</div>`,
-                iconSize: [60, 60],
-                iconAnchor: [30, 30]
+                html: `<div style="background: ${markerColor}; width: 45px; height: 45px; border-radius: 0%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>`,
+                iconSize: [45, 45],
+                iconAnchor: [22.5, 22.5]
             }));
         }
         
