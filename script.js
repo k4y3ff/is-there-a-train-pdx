@@ -476,15 +476,11 @@ class TrainStatusApp {
                 <p><strong>Coordinates:</strong> 45.503373, -122.653787</p>
             </div>
             <div class="modal-section">
-                <h3>🚧 Train Crossing</h3>
-                <p>This intersection is crossed by Union Pacific Railroad tracks, 
-                which can block traffic for 5-15 minutes when freight trains pass through.</p>
-            </div>
-            <div class="modal-section">
-                <h3>⏰ Typical Train Times</h3>
-                <p>• Morning: 6:00 AM - 8:00 AM<br>
-                • Afternoon: 1:00 PM - 3:00 PM<br>
-                • Evening: 7:00 PM - 9:00 PM</p>
+                <h3>📹 Live Camera Feed</h3>
+                <div id="cctv-container">
+                    <div class="cctv-loading">Loading camera feed...</div>
+                </div>
+                <button onclick="refreshCamera()" class="refresh-btn">Refresh Camera</button>
             </div>
             <div class="modal-section">
                 <h3>🚇 MAX Transit</h3>
@@ -498,9 +494,46 @@ class TrainStatusApp {
                 <button onclick="refreshStatus()" class="refresh-btn">Refresh Status</button>
             </div>
         `;
+        
+        // Load the CCTV camera feed
+        this.loadCCTVFeed();
     }
     
 
+    
+    async loadCCTVFeed() {
+        try {
+            console.log('📹 Loading CCTV camera feed for Portland - 12th at Clinton...');
+            
+            // TripCheck API endpoint for camera "Portland - 12th at Clinton"
+            const tripCheckUrl = 'https://tripcheck.com/RoadCams/cams/12th%20at%20Clinton_pid3177.JPG';
+            
+            const cctvContainer = document.getElementById('cctv-container');
+            if (cctvContainer) {
+                cctvContainer.innerHTML = `
+                    <div class="cctv-image-container">
+                        <img src="${tripCheckUrl}?t=${Date.now()}" 
+                             alt="Portland - 12th at Clinton CCTV Camera" 
+                             class="cctv-image"
+                             onerror="this.parentElement.innerHTML='<div class=\'cctv-error\'>Camera feed unavailable</div>'"
+                             onload="this.parentElement.querySelector('.cctv-loading')?.remove()">
+                        <div class="cctv-loading">Loading camera feed...</div>
+                        <div class="cctv-info">
+                            <p><strong>Camera 214:</strong> Portland - 12th at Clinton</p>
+                            <p><em>Live traffic camera feed from TripCheck</em></p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+        } catch (error) {
+            console.error('❌ Error loading CCTV feed:', error);
+            const cctvContainer = document.getElementById('cctv-container');
+            if (cctvContainer) {
+                cctvContainer.innerHTML = '<div class="cctv-error">Error loading camera feed</div>';
+            }
+        }
+    }
     
     addMaxTrainLegend() {
         const legend = L.control({ position: 'bottomright' });
@@ -684,6 +717,13 @@ class TrainStatusApp {
 function refreshStatus() {
     if (window.trainApp) {
         window.trainApp.checkTrainStatus();
+    }
+}
+
+// Global function for refreshing camera feed
+function refreshCamera() {
+    if (window.trainApp) {
+        window.trainApp.loadCCTVFeed();
     }
 }
 
