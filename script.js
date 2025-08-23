@@ -38,7 +38,7 @@ class TrainStatusApp {
         this.statusMarker = L.marker(config.map.center, {
             icon: L.divIcon({
                 className: 'intersection-marker',
-                html: '<div style="background: #FFB81C; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>',
+                html: '<div style="background: #FFB81C; width: 20px; height: 20px; border-radius: 0%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>',
                 iconSize: [20, 20],
                 iconAnchor: [10, 10]
             })
@@ -600,7 +600,7 @@ class TrainStatusApp {
             
             this.statusMarker.setIcon(L.divIcon({
                 className: 'intersection-marker',
-                html: `<div style="background: ${markerColor}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>`,
+                html: `<div style="background: ${markerColor}; width: 20px; height: 20px; border-radius: 0%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>`,
                 iconSize: [20, 20],
                 iconAnchor: [10, 10]
             }));

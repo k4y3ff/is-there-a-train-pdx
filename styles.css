@@ -126,7 +126,7 @@ header h1:hover {
 .status-dot-overlay .status-dot {
     width: 60px;
     height: 60px;
-    border-radius: 50%;
+    border-radius: 0%;
     margin: 0 auto 1rem;
     border: 4px solid white;
     box-shadow: 0 4px 20px rgba(0,0,0,0.3);
@@ -710,4 +710,9 @@ footer a:hover {
     .train-direction {
         font-size: 6px;
     }
+}
+
+/* Intersection Marker - Force Square Shape */
+.intersection-marker div {
+    border-radius: 0% !important;
 } 
