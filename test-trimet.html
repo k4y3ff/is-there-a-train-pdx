@@ -91,7 +91,6 @@
             <button class="test-button" onclick="testVehicles()">Test Vehicles Endpoint</button>
             <button class="test-button" onclick="testArrivals()">Test Arrivals Endpoint</button>
             <button class="test-button" onclick="testAlternativeEndpoints()">Test Alternative Endpoints</button>
-            <button class="test-button" onclick="testBaseURLs()">Test Base URLs</button>
             <button class="test-button" onclick="testAll()">Test All Endpoints</button>
         </div>
         
@@ -177,9 +176,9 @@
         
         async function testRoutes() {
             const endpoints = [
-                `${config.trimet.baseUrl}/routes/?appID=${config.trimet.appId}`,
-                `${config.trimet.baseUrl}/routes/?appID=${config.trimet.appId}&format=json`,
-                `${config.trimet.baseUrl}/routes/?appID=${config.trimet.appId}&json=true`
+                `${config.trimet.baseUrl}/routes?appID=${config.trimet.appId}`,
+                `${config.trimet.baseUrl}/routes?appID=${config.trimet.appId}&format=json`,
+                `${config.trimet.baseUrl}/routes?appID=${config.trimet.appId}&json=true`
             ];
             
             for (const endpoint of endpoints) {
@@ -189,9 +188,9 @@
         
         async function testVehicles() {
             const endpoints = [
-                `${config.trimet.baseUrl}/vehicles/?appID=${config.trimet.appId}`,
-                `${config.trimet.baseUrl}/vehicles/?appID=${config.trimet.appId}&format=json`,
-                `${config.trimet.baseUrl}/vehicles/?appID=${config.trimet.appId}&json=true`
+                `${config.trimet.baseUrl}/vehicles?appID=${config.trimet.appId}`,
+                `${config.trimet.baseUrl}/vehicles?appID=${config.trimet.appId}&format=json`,
+                `${config.trimet.baseUrl}/vehicles?appID=${config.trimet.appId}&json=true`
             ];
             
             for (const endpoint of endpoints) {
@@ -201,9 +200,9 @@
         
         async function testArrivals() {
             const endpoints = [
-                `${config.trimet.baseUrl}/arrivals/?appID=${config.trimet.appId}`,
-                `${config.trimet.baseUrl}/arrivals/?appID=${config.trimet.appId}&format=json`,
-                `${config.trimet.baseUrl}/arrivals/?appID=${config.trimet.appId}&json=true`
+                `${config.trimet.baseUrl}/arrivals?appID=${config.trimet.appId}`,
+                `${config.trimet.baseUrl}/arrivals?appID=${config.trimet.appId}&format=json`,
+                `${config.trimet.baseUrl}/arrivals?appID=${config.trimet.appId}&json=true`
             ];
             
             for (const endpoint of endpoints) {
@@ -215,10 +214,7 @@
             log('🧪 Testing alternative endpoints...');
             
             const alternativeEndpoints = [
-                `${config.trimet.baseUrl}/vehicleLocations/?appID=${config.trimet.appId}`,
-                `${config.trimet.baseUrl}/arrivalTimes/?appID=${config.trimet.appId}`,
-                `${config.trimet.baseUrl}/routeConfig/?appID=${config.trimet.appId}`,
-                `${config.trimet.baseUrl}/stops/?appID=${config.trimet.appId}`
+                `${config.trimet.baseUrl}/stops?appID=${config.trimet.appId}`
             ];
             
             for (const endpoint of alternativeEndpoints) {
@@ -233,26 +229,6 @@
             await testArrivals();
             await testAlternativeEndpoints();
             log('✅ All tests completed!');
-        }
-        
-        async function testBaseURLs() {
-            log('🧪 Testing different base URLs...');
-            
-            const baseURLs = [
-                'https://developer.trimet.org/ws',
-                'https://developer.trimet.org/ws/V1',
-                'https://developer.trimet.org/ws/v1',
-                'https://developer.trimet.org/ws/V2',
-                'https://developer.trimet.org/ws/v2',
-                'https://developer.trimet.org/api',
-                'https://developer.trimet.org/api/v1'
-            ];
-            
-            for (const baseURL of baseURLs) {
-                log(`🔍 Testing base URL: ${baseURL}`);
-                const testUrl = `${baseURL}/routes/?appID=${config.trimet.appId}`;
-                await testEndpoint(testUrl, `Base URL: ${baseURL}`);
-            }
         }
     </script>
 </body>

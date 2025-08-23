@@ -214,10 +214,9 @@ const config = {
 
 ## Dependencies
 
-The app uses Leaflet.js for interactive mapping:
-- **Leaflet**: Free, open-source mapping library
-- **OpenStreetMap**: Free map tiles and data
-- **No API keys required**: All mapping services are free to use
+- **Leaflet.js**: Open-source JavaScript library for interactive maps
+- **OpenStreetMap**: Free map tiles used with Leaflet
+- **TriMet GTFS Real-time API**: Uses v2 endpoint (`https://developer.trimet.org/ws/v2/vehicles`) for live MAX train data
 
 ## License
 

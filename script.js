@@ -97,69 +97,40 @@ class TrainStatusApp {
         console.log('🔑 App ID:', config.trimet.appId);
         console.log('🌐 Base URL:', config.trimet.baseUrl);
         
-        // Test different possible base URLs
-        const possibleBaseUrls = [
-            'https://developer.trimet.org/ws',
-            'https://developer.trimet.org/ws/V1',
-            'https://developer.trimet.org/ws/v1',
-            'https://developer.trimet.org/ws/V2',
-            'https://developer.trimet.org/ws/v2',
-            'https://developer.trimet.org/ws/',
-            'https://developer.trimet.org/api',
-            'https://developer.trimet.org/api/v1'
-        ];
-        
-        for (const baseUrl of possibleBaseUrls) {
-            try {
-                console.log(`🔍 Testing base URL: ${baseUrl}`);
-                const testUrl = `${baseUrl}/routes/?appID=${config.trimet.appId}`;
-                console.log('📡 Testing URL:', testUrl);
+        try {
+            // Test the working v2 vehicles endpoint
+            const testUrl = `${config.trimet.baseUrl}/vehicles?appID=${config.trimet.appId}`;
+            console.log('📡 Testing URL:', testUrl);
+            
+            const testResponse = await fetch(testUrl);
+            console.log('📡 Test API response status:', testResponse.status);
+            
+            if (testResponse.ok) {
+                const testData = await testResponse.json();
+                console.log('✅ API connection successful with v2 endpoint!');
+                console.log('📋 Response structure:', Object.keys(testData));
                 
-                const testResponse = await fetch(testUrl);
-                console.log('📊 Response status:', testResponse.status);
-                
-                if (testResponse.ok) {
-                    const testData = await testResponse.json();
-                    console.log('✅ API connection successful with base URL:', baseUrl);
-                    console.log('📋 Available endpoints:', Object.keys(testData));
-                    
-                    // Check if we can access the data
-                    if (testData.resultSet) {
-                        console.log('📊 ResultSet keys:', Object.keys(testData.resultSet));
+                // Check if we can access the data
+                if (testData.resultSet) {
+                    console.log('📊 ResultSet keys:', Object.keys(testData.resultSet));
+                    if (testData.resultSet.vehicle) {
+                        console.log('🚇 Vehicle count:', testData.resultSet.vehicle.length);
                     }
-                    
-                    // Update the config if we find a working base URL
-                    if (baseUrl !== config.trimet.baseUrl) {
-                        console.log('🔄 Updating config to use working base URL:', baseUrl);
-                        config.trimet.baseUrl = baseUrl;
-                    }
-                    break;
-                } else {
-                    console.warn('⚠️ Base URL failed:', baseUrl, 'Status:', testResponse.status);
-                    const errorText = await testResponse.text();
-                    console.warn('📋 Error response:', errorText);
                 }
-            } catch (error) {
-                console.error('❌ Error with base URL:', baseUrl, error.message);
-                
-                // Check if it's a CORS issue
-                if (error.message.includes('CORS') || error.message.includes('cross-origin')) {
-                    console.error('🚫 CORS issue detected with:', baseUrl);
-                }
+            } else {
+                console.warn('⚠️ API connection test failed:', testResponse.status);
+                const errorText = await testResponse.text();
+                console.warn('📋 Error response:', errorText);
+            }
+        } catch (error) {
+            console.error('❌ API connection test error:', error);
+            
+            // Check if it's a CORS issue
+            if (error.message.includes('CORS') || error.message.includes('cross-origin')) {
+                console.error('🚫 CORS issue detected - this might be the problem!');
+                console.error('💡 TriMet API might not support browser requests directly');
             }
         }
-        
-        // If none of the base URLs work, try a different approach
-        if (!config.trimet.baseUrl.includes('developer.trimet.org')) {
-            console.log('🔄 Trying alternative API approach...');
-            console.log('💡 The issue might be that TriMet has changed their API structure');
-            console.log('💡 You may need to check their current developer documentation');
-        }
-        
-        // Try to find any working endpoint
-        console.log('🔍 Attempting to find any working TriMet API endpoint...');
-        console.log('💡 If all endpoints fail, TriMet may have changed their API structure');
-        console.log('💡 Check their current developer documentation at: https://developer.trimet.org/');
     }
     
     async updateMaxTrains() {
@@ -224,17 +195,10 @@ class TrainStatusApp {
             
             // Try multiple endpoints to find MAX train data
             const endpoints = [
-                `${config.trimet.baseUrl}/vehicles/`,
-                `${config.trimet.baseUrl}/arrivals/`,
-                `${config.trimet.baseUrl}/routes/`,
-                `${config.trimet.baseUrl}/stops/`,
-                `${config.trimet.baseUrl}/vehicleLocations/`,
-                `${config.trimet.baseUrl}/arrivalTimes/`,
-                `${config.trimet.baseUrl}/routeConfig/`,
-                // Try GTFS real-time endpoints
-                `${config.trimet.baseUrl}/gtfs/vehicles/`,
-                `${config.trimet.baseUrl}/gtfs/trips/`,
-                `${config.trimet.baseUrl}/gtfs/routes/`
+                `${config.trimet.baseUrl}/vehicles`,
+                `${config.trimet.baseUrl}/arrivals`,
+                `${config.trimet.baseUrl}/routes`,
+                `${config.trimet.baseUrl}/stops`
             ];
             
             let data = null;
