@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Does This Work? - Train Status App</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 How Does This Work?</h1>
+            <p class="subtitle">Understanding how we detect trains at NW 9th & Naito</p>
+            <nav class="main-nav">
+                <a href="index.html" class="nav-link">🏠 Back to Train Status</a>
+            </nav>
+        </header>
+        
+        <main>
+            <div class="info-section">
+                <h2>Current Implementation</h2>
+                <p>This app currently uses a <strong>simulation system</strong> to demonstrate how train detection would work. Here's what's happening behind the scenes:</p>
+                
+                <div class="method-grid">
+                    <div class="method-card">
+                        <span class="method-icon">🎯</span>
+                        <h3>Pattern Recognition</h3>
+                        <p>Analyzes typical Portland freight train schedules and patterns to simulate realistic blocking scenarios.</p>
+                    </div>
+                    
+                    <div class="method-card">
+                        <span class="method-icon">⏰</span>
+                        <h3>Time-Based Logic</h3>
+                        <p>Considers rush hour traffic, scheduled train times, and random factors to create realistic variations.</p>
+                    </div>
+                    
+                    <div class="method-card">
+                        <span class="method-icon">🔄</span>
+                        <h3>Continuous Updates</h3>
+                        <p>Refreshes status every 30 seconds and provides real-time timestamps for each check.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h2>How the Simulation Works</h2>
+                <p>The app uses several factors to determine if a train is currently blocking the intersection:</p>
+                
+                <div class="simulation-details">
+                    <div class="detail-item">
+                        <h4>🕐 Time Analysis</h4>
+                        <ul>
+                            <li><strong>Rush Hour Detection:</strong> Identifies peak traffic times (7-9 AM, 4-6 PM)</li>
+                            <li><strong>Scheduled Trains:</strong> Simulates trains at common times (10 AM, 2 PM, 8 PM)</li>
+                            <li><strong>Duration Simulation:</strong> Trains typically block intersections for 5-15 minutes</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <h4>🎲 Realistic Variation</h4>
+                        <ul>
+                            <li><strong>Probability Factors:</strong> Uses random calculations to avoid predictable patterns</li>
+                            <li><strong>Unexpected Delays:</strong> Simulates occasional unscheduled train blocks</li>
+                            <li><strong>Weather Considerations:</strong> Accounts for typical Portland weather patterns</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h2>Future Real-Time Integration</h2>
+                <p>To make this app production-ready, we would integrate with actual data sources:</p>
+                
+                <div class="integration-grid">
+                    <div class="integration-card">
+                        <span class="integration-icon">📡</span>
+                        <h3>Traffic APIs</h3>
+                        <p>Portland Bureau of Transportation (PBOT) APIs for real-time traffic data and intersection status.</p>
+                    </div>
+                    
+                    <div class="integration-card">
+                        <span class="integration-icon">🚂</span>
+                        <h3>Railroad Data</h3>
+                        <p>Union Pacific, BNSF, or other railroad company APIs for train schedules and locations.</p>
+                    </div>
+                    
+                    <div class="integration-card">
+                        <span class="integration-icon">📹</span>
+                        <h3>Traffic Cameras</h3>
+                        <p>Real-time video feeds from traffic cameras at the intersection to visually confirm train presence.</p>
+                    </div>
+                    
+                    <div class="integration-card">
+                        <span class="integration-icon">📱</span>
+                        <h3>User Reports</h3>
+                        <p>Crowdsourced reports from commuters using the app to report train blocks in real-time.</p>
+                    </div>
+                    
+                    <div class="integration-card">
+                        <span class="integration-icon">🚦</span>
+                        <h3>Signal Data</h3>
+                        <p>Traffic signal timing data that indicates when trains are crossing the intersection.</p>
+                    </div>
+                    
+                    <div class="integration-card">
+                        <span class="integration-icon">📊</span>
+                        <h3>Sensor Networks</h3>
+                        <p>Embedded sensors in the road or tracks that detect train presence and weight.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h2>Technical Architecture</h2>
+                <p>When fully implemented, the system would work like this:</p>
+                
+                <div class="architecture-flow">
+                    <div class="flow-step">
+                        <span class="step-number">1</span>
+                        <h4>Data Collection</h4>
+                        <p>Multiple data sources continuously feed information about the intersection status.</p>
+                    </div>
+                    
+                    <div class="flow-arrow">→</div>
+                    
+                    <div class="flow-step">
+                        <span class="step-number">2</span>
+                        <h4>Analysis Engine</h4>
+                        <p>AI algorithms analyze the data to determine if a train is currently blocking traffic.</p>
+                    </div>
+                    
+                    <div class="flow-arrow">→</div>
+                    
+                    <div class="flow-step">
+                        <span class="step-number">3</span>
+                        <h4>Status Update</h4>
+                        <p>The app receives the analysis result and updates the display in real-time.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h2>Accuracy & Reliability</h2>
+                <p>In a production environment, we would implement several measures to ensure accuracy:</p>
+                
+                <ul class="reliability-list">
+                    <li><strong>Multiple Data Sources:</strong> Cross-reference information from several sources to avoid false positives</li>
+                    <li><strong>Confidence Scoring:</strong> Assign confidence levels to each status update based on data quality</li>
+                    <li><strong>Fallback Systems:</strong> Backup detection methods when primary sources are unavailable</li>
+                    <li><strong>User Verification:</strong> Allow users to report incorrect statuses for continuous improvement</li>
+                    <li><strong>Historical Analysis:</strong> Use past data to improve prediction accuracy over time</li>
+                </ul>
+            </div>
+        </main>
+        
+        <footer>
+            <p><a href="index.html">← Back to Train Status</a> • Built for Portland commuters</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Initialize the page and make it visible
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.classList.add('loaded');
+        });
+    </script>
+</body>
+</html> 

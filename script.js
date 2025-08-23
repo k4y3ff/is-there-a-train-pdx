@@ -1,15 +1,18 @@
 // Train Status App
 class TrainStatusApp {
     constructor() {
-        this.statusText = document.getElementById('statusText');
-        this.statusIndicator = document.getElementById('statusIndicator');
         this.updateTime = document.getElementById('updateTime');
         this.lastUpdated = document.getElementById('lastUpdated');
+        this.map = null;
+        this.statusMarker = null;
+        this.statusDotMarker = null;
+        this.statusDotOverlay = null;
         
         this.init();
     }
     
     init() {
+        this.initMap();
         this.checkTrainStatus();
         // Check status every 30 seconds
         setInterval(() => this.checkTrainStatus(), 30000);
@@ -18,11 +21,59 @@ class TrainStatusApp {
         this.addEventListeners();
     }
     
+    initMap() {
+        // Initialize the map centered on NW 9th & Naito intersection
+        // Coordinates: 45.5275, -122.6731 (NW 9th Ave & NW Naito Pkwy, Portland, OR)
+        this.map = L.map('map').setView([45.5275, -122.6731], 16);
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(this.map);
+        
+        // Add a marker for the intersection
+        this.statusMarker = L.marker([45.5275, -122.6731], {
+            icon: L.divIcon({
+                className: 'intersection-marker',
+                html: '<div style="background: #FFB81C; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(this.map);
+        
+        // Add intersection label
+        L.marker([45.5275, -122.6731], {
+            icon: L.divIcon({
+                className: 'intersection-label',
+                html: '<div style="background: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; color: #1f2937; border: 1px solid #e5e7eb;">NW 9th & Naito</div>',
+                iconSize: [100, 30],
+                iconAnchor: [50, 30]
+            })
+        }).addTo(this.map);
+        
+        // Create status dot overlay that stays centered on the intersection
+        this.statusDotOverlay = L.divIcon({
+            className: 'status-dot-overlay',
+            html: `
+                <div class="status-dot" id="statusDot"></div>
+                <div class="status-label" id="statusLabel">Checking...</div>
+            `,
+            iconSize: [120, 80],
+            iconAnchor: [60, 40]
+        });
+        
+        // Add the status dot as a map overlay
+        this.statusDotMarker = L.marker([45.5275, -122.6731], {
+            icon: this.statusDotOverlay,
+            interactive: false
+        }).addTo(this.map);
+        
+        // Add click handler to refresh status
+        this.map.on('click', () => this.checkTrainStatus());
+    }
+    
     addEventListeners() {
         // Add click to refresh functionality
-        this.statusIndicator.addEventListener('click', () => this.checkTrainStatus());
-        
-        // Add keyboard shortcut (R key) to refresh
         document.addEventListener('keydown', (e) => {
             if (e.key === 'r' || e.key === 'R') {
                 this.checkTrainStatus();
@@ -43,16 +94,16 @@ class TrainStatusApp {
             const trainStatus = this.simulateTrainDetection();
             
             if (trainStatus.isBlocking) {
-                this.setStatus('yes', 'YES');
+                this.setStatus('blocked', 'TRAIN BLOCKING');
             } else {
-                this.setStatus('no', 'NO');
+                this.setStatus('clear', 'CLEAR');
             }
             
             this.updateTimestamp();
             
         } catch (error) {
             console.error('Error checking train status:', error);
-            this.setStatus('error', 'Error');
+            this.setStatus('error', 'ERROR');
         }
     }
     
@@ -91,23 +142,69 @@ class TrainStatusApp {
     }
     
     setStatus(status, text) {
-        // Remove all status classes
-        this.statusText.classList.remove('yes', 'no', 'checking', 'error');
+        // Get the status dot and label elements from the map overlay
+        const statusDot = document.querySelector('.status-dot-overlay .status-dot');
+        const statusLabel = document.querySelector('.status-dot-overlay .status-label');
         
-        // Add new status class
-        this.statusText.classList.add(status);
+        if (statusDot && statusLabel) {
+            // Remove all status classes
+            statusDot.classList.remove('blocked', 'clear', 'checking', 'error');
+            
+            // Add new status class
+            statusDot.classList.add(status);
+            
+            // Update label text
+            statusLabel.textContent = text;
+        }
         
-        // Update text
-        this.statusText.textContent = text;
+        // Update marker color based on status
+        if (this.statusMarker) {
+            let markerColor = '#FFB81C'; // default yellow
+            if (status === 'blocked') markerColor = '#dc2626'; // red
+            else if (status === 'clear') markerColor = '#046A38'; // green
+            else if (status === 'error') markerColor = '#6b7280'; // gray
+            
+            this.statusMarker.setIcon(L.divIcon({
+                className: 'intersection-marker',
+                html: `<div style="background: ${markerColor}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            }));
+        }
         
-        // Add visual feedback
-        this.statusIndicator.style.cursor = 'pointer';
-        
-        // Add subtle animation for status changes
-        this.statusIndicator.style.transform = 'scale(1.05)';
-        setTimeout(() => {
-            this.statusIndicator.style.transform = 'scale(1)';
-        }, 200);
+        // Add visual feedback by updating the overlay icon
+        if (this.statusDotMarker) {
+            let dotColor = '#FFB81C'; // default yellow
+            if (status === 'blocked') dotColor = '#dc2626'; // red
+            else if (status === 'clear') dotColor = '#046A38'; // green
+            else if (status === 'error') dotColor = '#6b7280'; // gray
+            
+            // Update the status dot overlay with new color and text
+            this.statusDotMarker.setIcon(L.divIcon({
+                className: 'status-dot-overlay',
+                html: `
+                    <div class="status-dot ${status}" style="background: ${dotColor}; transform: scale(1.1);"></div>
+                    <div class="status-label">${text}</div>
+                `,
+                iconSize: [120, 80],
+                iconAnchor: [60, 40]
+            }));
+            
+            // Reset the scale after animation
+            setTimeout(() => {
+                if (this.statusDotMarker) {
+                    this.statusDotMarker.setIcon(L.divIcon({
+                        className: 'status-dot-overlay',
+                        html: `
+                            <div class="status-dot ${status}" style="background: ${dotColor}; transform: scale(1);"></div>
+                            <div class="status-label">${text}</div>
+                        `,
+                        iconSize: [120, 80],
+                        iconAnchor: [60, 40]
+                    }));
+                }
+            }, 200);
+        }
     }
     
     updateTimestamp() {

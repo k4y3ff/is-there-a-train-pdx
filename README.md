@@ -4,9 +4,10 @@ A simple web application that displays whether a train is currently blocking the
 
 ## Features
 
-- **Real-time Status**: Shows "YES" if a train is blocking, "NO" if not
-- **Auto-refresh**: Updates every 30 seconds
-- **Interactive**: Click the status or press 'R' to refresh manually
+- **Interactive Map**: Shows the intersection location with a colored status dot
+- **Visual Status Indicator**: Green dot = clear, Red dot = train blocking, Yellow dot = checking
+- **Real-time Updates**: Updates every 30 seconds
+- **Interactive**: Click the map or press 'R' to refresh manually
 - **Responsive Design**: Works on desktop and mobile devices
 - **Portland-themed Design**: Uses official Portland city flag colors (forest green, sky blue, goldenrod yellow)
 - **Modern UI**: Clean, professional design with smooth animations
@@ -21,6 +22,15 @@ The website features a beautiful Portland-themed color scheme using the official
 
 This creates a distinctly Portland aesthetic that connects the app to the city it serves.
 
+### Status Display
+
+Instead of simple text, the app now shows:
+- **🗺️ Interactive Map**: Centered on the NW 9th & Naito intersection
+- **🔴 Red Dot**: Train is currently blocking the intersection
+- **🟢 Green Dot**: Intersection is clear, no train blocking
+- **🟡 Yellow Dot**: Checking status (during updates)
+- **⚫ Gray Dot**: Error occurred while checking
+
 ## Current Implementation
 
 This is a **demo/prototype** version that simulates train detection. In a production environment, you would integrate with:
@@ -34,10 +44,10 @@ This is a **demo/prototype** version that simulates train detection. In a produc
 
 ## Files
 
-- `index.html` - Main HTML structure with train status display
+- `index.html` - Main HTML structure with interactive map and status display
 - `how-it-works.html` - Detailed explanation page of how the system works
 - `styles.css` - Styling with Portland-themed colors and responsive design
-- `script.js` - JavaScript functionality and train status logic
+- `script.js` - JavaScript functionality, map initialization, and train status logic
 - `netlify.toml` - Netlify deployment configuration
 - `deploy.sh` - Deployment script for local testing
 - `package.json` - Project metadata and scripts
@@ -46,7 +56,8 @@ This is a **demo/prototype** version that simulates train detection. In a produc
 ## Pages
 
 ### Main Page (`index.html`)
-- Displays current train blocking status (YES/NO)
+- Interactive map centered on the intersection
+- Colored status dot overlay showing current train status
 - Auto-refreshes every 30 seconds
 - Shows last update timestamp
 - Information about the intersection location
@@ -85,7 +96,8 @@ This is a **demo/prototype** version that simulates train detection. In a produc
 
 To monitor a different intersection, update the location in:
 - `index.html` - Update the title and subtitle
-- `script.js` - Modify the `simulateTrainDetection()` function
+- `script.js` - Modify the coordinates in `initMap()` function
+- `script.js` - Update the `simulateTrainDetection()` function
 
 ### Integrating Real Data
 
@@ -101,15 +113,15 @@ async checkTrainStatus() {
         const data = await response.json();
         
         if (data.trainBlocking) {
-            this.setStatus('yes', 'YES');
+            this.setStatus('blocked', 'TRAIN BLOCKING');
         } else {
-            this.setStatus('no', 'NO');
+            this.setStatus('clear', 'CLEAR');
         }
         
         this.updateTimestamp();
     } catch (error) {
         console.error('Error:', error);
-        this.setStatus('error', 'Error');
+        this.setStatus('error', 'ERROR');
     }
 }
 ```
@@ -127,6 +139,13 @@ async checkTrainStatus() {
 - Firefox (latest)
 - Safari (latest)
 - Edge (latest)
+
+## Dependencies
+
+The app uses Leaflet.js for interactive mapping:
+- **Leaflet**: Free, open-source mapping library
+- **OpenStreetMap**: Free map tiles and data
+- **No API keys required**: All mapping services are free to use
 
 ## License
 
