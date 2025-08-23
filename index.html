@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Is There a Train Blocking NW 9th & Naito?</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚂 Train Status</h1>
+            <p class="subtitle">NW 9th Ave & NW Naito Pkwy, Portland, OR</p>
+        </header>
+        
+        <main>
+            <div class="status-card" id="statusCard">
+                <div class="status-indicator" id="statusIndicator">
+                    <span class="status-text" id="statusText">Checking...</span>
+                </div>
+                <div class="last-updated" id="lastUpdated">
+                    Last updated: <span id="updateTime">--</span>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h2>About This Intersection</h2>
+                <p>This app monitors the railroad crossing at NW 9th Ave and NW Naito Pkwy in Portland's Pearl District. When trains pass through, they can block traffic for several minutes.</p>
+                
+                <div class="features">
+                    <div class="feature">
+                        <span class="feature-icon">📍</span>
+                        <div>
+                            <h3>Location</h3>
+                            <p>NW 9th Ave & NW Naito Pkwy<br>Portland, OR 97209</p>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon">⏰</span>
+                        <div>
+                            <h3>Real-time Updates</h3>
+                            <p>Status updates every 30 seconds</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Built for Portland commuters • <a href="#" onclick="refreshStatus()">Refresh Now</a></p>
+        </footer>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html> 
