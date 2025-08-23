@@ -6,9 +6,20 @@ A simple web application that displays whether a train is currently blocking the
 
 - **Real-time Status**: Shows "YES" if a train is blocking, "NO" if not
 - **Auto-refresh**: Updates every 30 seconds
-- **Responsive Design**: Works on desktop and mobile devices
 - **Interactive**: Click the status or press 'R' to refresh manually
+- **Responsive Design**: Works on desktop and mobile devices
+- **Portland-themed Design**: Uses official Portland city flag colors (forest green, sky blue, goldenrod yellow)
 - **Modern UI**: Clean, professional design with smooth animations
+- **Documentation**: Detailed "How Does This Work?" page explaining the system
+
+## Design
+
+The website features a beautiful Portland-themed color scheme using the official colors from the City of Portland flag:
+- **Forest Green** (#046A38) - Symbolizing Portland's forests and green spaces
+- **Sky Blue** (#418FDE) - Representing the rivers that flow through the city
+- **Goldenrod Yellow** (#FFB81C) - Symbolizing agriculture and commerce
+
+This creates a distinctly Portland aesthetic that connects the app to the city it serves.
 
 ## Current Implementation
 
@@ -23,10 +34,30 @@ This is a **demo/prototype** version that simulates train detection. In a produc
 
 ## Files
 
-- `index.html` - Main HTML structure
-- `styles.css` - Styling and responsive design
+- `index.html` - Main HTML structure with train status display
+- `how-it-works.html` - Detailed explanation page of how the system works
+- `styles.css` - Styling with Portland-themed colors and responsive design
 - `script.js` - JavaScript functionality and train status logic
 - `netlify.toml` - Netlify deployment configuration
+- `deploy.sh` - Deployment script for local testing
+- `package.json` - Project metadata and scripts
+- `README.md` - This documentation file
+
+## Pages
+
+### Main Page (`index.html`)
+- Displays current train blocking status (YES/NO)
+- Auto-refreshes every 30 seconds
+- Shows last update timestamp
+- Information about the intersection location
+- Navigation to "How Does This Work?" page
+
+### How Does This Work? (`how-it-works.html`)
+- Explains the current simulation approach
+- Details the time-based logic and pattern recognition
+- Outlines future real-time integration possibilities
+- Shows technical architecture and reliability measures
+- Provides comprehensive understanding of the system
 
 ## Deployment to Netlify
 
@@ -88,6 +119,7 @@ async checkTrainStatus() {
 1. Clone or download the project
 2. Open `index.html` in a web browser
 3. Or use a local server: `python -m http.server 8000`
+4. Use the navigation to explore both pages
 
 ## Browser Support
 
@@ -106,4 +138,4 @@ Feel free to submit issues, feature requests, or pull requests to improve the ap
 
 ---
 
-**Note**: This application currently simulates train detection for demonstration purposes. To make it production-ready, integrate with real-time data sources specific to Portland's railroad infrastructure. 
+**Note**: This application currently simulates train detection for demonstration purposes. To make it production-ready, integrate with real-time data sources specific to Portland's railroad infrastructure. The "How Does This Work?" page provides detailed information about the current simulation and future integration possibilities. 

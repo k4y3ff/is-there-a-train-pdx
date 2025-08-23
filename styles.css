@@ -8,7 +8,7 @@ body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.6;
     color: #333;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #418FDE 0%, #046A38 100%);
     min-height: 100vh;
     opacity: 0;
     transition: opacity 0.5s ease;
@@ -47,6 +47,30 @@ header h1:hover {
     font-size: 1.2rem;
     opacity: 0.9;
     font-weight: 400;
+    margin-bottom: 1.5rem;
+}
+
+.main-nav {
+    margin-top: 1rem;
+}
+
+.nav-link {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.nav-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 .status-card {
@@ -57,6 +81,7 @@ header h1:hover {
     box-shadow: 0 20px 40px rgba(0,0,0,0.1);
     margin-bottom: 3rem;
     transition: all 0.3s ease;
+    border-top: 5px solid #FFB81C;
 }
 
 .status-card:hover {
@@ -88,11 +113,11 @@ header h1:hover {
 }
 
 .status-text.no {
-    color: #16a34a;
+    color: #046A38;
 }
 
 .status-text.checking {
-    color: #f59e0b;
+    color: #FFB81C;
 }
 
 .status-text.error {
@@ -112,6 +137,7 @@ header h1:hover {
     padding: 2rem;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     margin-bottom: 2rem;
+    border-left: 5px solid #046A38;
 }
 
 .info-section h2 {
@@ -154,6 +180,197 @@ header h1:hover {
     color: #6b7280;
     font-size: 0.9rem;
     margin: 0;
+}
+
+/* New styles for How Does This Work page */
+.method-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.method-card {
+    background: #f8fafc;
+    border-radius: 15px;
+    padding: 1.5rem;
+    border-left: 4px solid #418FDE;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.method-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.method-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.method-card h3 {
+    color: #1f2937;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.method-card p {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.simulation-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 1rem;
+}
+
+.detail-item h4 {
+    color: #1f2937;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.detail-item ul {
+    list-style: none;
+    padding: 0;
+}
+
+.detail-item li {
+    color: #4b5563;
+    margin-bottom: 0.75rem;
+    padding-left: 1.5rem;
+    position: relative;
+    line-height: 1.6;
+}
+
+.detail-item li:before {
+    content: "•";
+    color: #418FDE;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+.integration-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.integration-card {
+    background: #f8fafc;
+    border-radius: 15px;
+    padding: 1.5rem;
+    border: 2px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.integration-card:hover {
+    border-color: #418FDE;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.integration-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.integration-card h3 {
+    color: #1f2937;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.integration-card p {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.architecture-flow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+}
+
+.flow-step {
+    background: #f8fafc;
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+    border-top: 3px solid #FFB81C;
+}
+
+.step-number {
+    background: #046A38;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin: 0 auto 1rem;
+    font-size: 1.2rem;
+}
+
+.flow-step h4 {
+    color: #1f2937;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.flow-step p {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.flow-arrow {
+    font-size: 2rem;
+    color: #FFB81C;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.reliability-list {
+    list-style: none;
+    padding: 0;
+}
+
+.reliability-list li {
+    color: #4b5563;
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+    position: relative;
+    line-height: 1.6;
+}
+
+.reliability-list li:before {
+    content: "✓";
+    color: #046A38;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+    font-size: 1.1rem;
 }
 
 footer {
@@ -229,6 +446,20 @@ footer a:hover {
     .info-section {
         padding: 1.5rem;
     }
+    
+    .simulation-details {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .architecture-flow {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .flow-arrow {
+        transform: rotate(90deg);
+    }
 }
 
 @media (max-width: 480px) {
@@ -242,5 +473,14 @@ footer a:hover {
     
     .status-card {
         padding: 1.5rem 1rem;
+    }
+    
+    .method-grid,
+    .integration-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .flow-step {
+        min-width: auto;
     }
 } 

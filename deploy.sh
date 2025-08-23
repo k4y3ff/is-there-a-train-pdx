@@ -4,7 +4,7 @@
 echo "🚂 Preparing Train Status App for deployment..."
 
 # Check if all required files exist
-required_files=("index.html" "styles.css" "script.js" "netlify.toml" "README.md")
+required_files=("index.html" "how-it-works.html" "styles.css" "script.js" "netlify.toml" "README.md")
 missing_files=()
 
 for file in "${required_files[@]}"; do
@@ -23,6 +23,7 @@ echo "✅ All required files found"
 # Create a simple local test server
 echo "🌐 Starting local test server..."
 echo "📱 Open http://localhost:8000 in your browser"
+echo "🔍 Check out the 'How Does This Work?' page for detailed information"
 echo "🛑 Press Ctrl+C to stop the server"
 echo ""
 
