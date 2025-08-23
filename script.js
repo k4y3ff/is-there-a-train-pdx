@@ -25,46 +25,34 @@ class TrainStatusApp {
     }
     
     initMap() {
-        // Initialize the map centered on NW 9th & Naito intersection
-        // Coordinates: 45.532533, -122.680120 (NW 9th Ave & NW Naito Pkwy, Portland, OR)
-        this.map = L.map('map').setView(config.map.center, config.map.zoom);
+        // Initialize the map centered on the SE 12th & Clinton intersection
+        // SE 12th & Clinton: 45.503373, -122.653787
+        this.map = L.map('map').setView([45.503373, -122.653787], 14);
         
         // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(this.map);
         
-        // Add a marker for the intersection
-        this.statusMarker = L.marker(config.map.center, {
+
+        
+        // Add a marker for the SE 12th & Clinton intersection
+        this.se12thClintonMarker = L.marker([45.503373, -122.653787], {
             icon: L.divIcon({
                 className: 'intersection-marker',
-                html: '<div style="background: #6b7280; width: 20px; height: 20px; border-radius: 0%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
+                html: '<div style="background: #046A38; width: 60px; height: 60px; border-radius: 0%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 42px;">📷</div>',
+                iconSize: [60, 60],
+                iconAnchor: [30, 30]
             })
         }).addTo(this.map);
         
-        // Make the intersection marker clickable to show modal
-        this.statusMarker.on('click', () => {
-            console.log('🎯 Intersection marker clicked directly');
+        // Make the SE 12th & Clinton intersection marker clickable to show modal
+        this.se12thClintonMarker.on('click', () => {
+            console.log('🎯 SE 12th & Clinton intersection marker clicked directly');
             this.showIntersectionModal();
         });
         
-        // Create status dot overlay that stays centered on the intersection
-        this.statusDotOverlay = L.divIcon({
-            className: 'status-dot-overlay',
-            html: `
-                <div class="status-dot unknown" id="statusDot"></div>
-            `,
-            iconSize: [80, 40],
-            iconAnchor: [40, 20]
-        });
-        
-        // Add the status dot as a map overlay
-        this.statusDotMarker = L.marker(config.map.center, {
-            icon: this.statusDotOverlay,
-            interactive: false
-        }).addTo(this.map);
+
         
         // Remove the general map click handler since we have direct marker click handling
         // this.map.on('click', (e) => this.showIntersectionInfo(e));
@@ -464,32 +452,55 @@ class TrainStatusApp {
     
 
     
-    showIntersectionModal() {
+    showIntersectionModal(intersectionType = 'nw9th-naito') {
         const modal = document.getElementById('intersectionModal');
         if (modal) {
+            // Update modal content based on intersection type
+            this.updateModalContent(intersectionType);
             modal.style.display = 'block';
-            console.log('📱 Opening intersection information modal');
+            console.log(`📱 Opening ${intersectionType} intersection information modal`);
         }
     }
     
-    showIntersectionInfo(e) {
-        // Check if click is near the intersection marker
-        const markerLatLng = this.statusMarker.getLatLng();
-        const clickLatLng = e.latlng;
-        const distance = markerLatLng.distanceTo(clickLatLng);
+    updateModalContent(intersectionType) {
+        const modalHeader = document.querySelector('#intersectionModal .modal-header h2');
+        const modalBody = document.querySelector('#intersectionModal .modal-body');
         
-        console.log('🗺️ Map clicked at:', clickLatLng);
-        console.log('📍 Intersection marker at:', markerLatLng);
-        console.log('📏 Distance:', distance, 'meters');
-        
-        // If click is within 50 meters of the intersection, show the popup
-        if (distance < 50) {
-            console.log('✅ Click near intersection, opening popup');
-            this.statusMarker.openPopup();
-        } else {
-            console.log('❌ Click too far from intersection');
-        }
+        // Only show SE 12th & Clinton intersection information
+        modalHeader.innerHTML = '🚂 SE 12th & Clinton Intersection';
+        modalBody.innerHTML = `
+            <div class="modal-section">
+                <h3>📍 Location</h3>
+                <p>SE 12th Avenue & SE Clinton Street<br>
+                Portland, Oregon 97202</p>
+                <p><strong>Coordinates:</strong> 45.503373, -122.653787</p>
+            </div>
+            <div class="modal-section">
+                <h3>🚧 Train Crossing</h3>
+                <p>This intersection is crossed by Union Pacific Railroad tracks, 
+                which can block traffic for 5-15 minutes when freight trains pass through.</p>
+            </div>
+            <div class="modal-section">
+                <h3>⏰ Typical Train Times</h3>
+                <p>• Morning: 6:00 AM - 8:00 AM<br>
+                • Afternoon: 1:00 PM - 3:00 PM<br>
+                • Evening: 7:00 PM - 9:00 PM</p>
+            </div>
+            <div class="modal-section">
+                <h3>🚇 MAX Transit</h3>
+                <p>Nearby MAX stations:<br>
+                • SE Clinton/SE 12th (Green Line)<br>
+                • SE Division/SE 12th (Green Line)</p>
+            </div>
+            <div class="modal-section">
+                <h3>🔄 Current Status</h3>
+                <p id="modal-status">UNKNOWN</p>
+                <button onclick="refreshStatus()" class="refresh-btn">Refresh Status</button>
+            </div>
+        `;
     }
+    
+
     
     addMaxTrainLegend() {
         const legend = L.control({ position: 'bottomright' });
@@ -578,8 +589,17 @@ class TrainStatusApp {
             this.setStatus('checking', 'Checking...');
             
             // In a real app, this would call actual APIs or services to determine train status
-            // For now, we'll set the status to unknown since we can't determine it
-            this.setStatus('unknown', 'UNKNOWN');
+            // For demo purposes, we'll simulate checking for trains
+            await this.delay(1000); // Simulate API call delay
+            
+            // Simulate checking if there's a train (this would be real data in production)
+            const hasTrain = Math.random() > 0.7; // 30% chance of train for demo
+            
+            if (hasTrain) {
+                this.setStatus('blocked', 'TRAIN BLOCKING');
+            } else {
+                this.setStatus('clear', 'CLEAR');
+            }
             
             this.updateTimestamp();
             
@@ -601,54 +621,34 @@ class TrainStatusApp {
             statusDot.classList.add(status);
         }
         
-        // Update marker color based on status
-        if (this.statusMarker) {
+        // Update marker color and emoji based on status for the SE 12th & Clinton intersection
+        if (this.se12thClintonMarker) {
             let markerColor = '#6b7280'; // default gray for unknown
-            if (status === 'blocked') markerColor = '#dc2626'; // red
-            else if (status === 'clear') markerColor = '#046A38'; // green
-            else if (status === 'checking') markerColor = '#FFB81C'; // yellow
-            else if (status === 'error') markerColor = '#dc2626'; // red for errors
+            let emoji = '📷'; // camera emoji for unknown/clear
             
-            this.statusMarker.setIcon(L.divIcon({
+            if (status === 'blocked') {
+                markerColor = '#dc2626'; // red
+                emoji = '🚂'; // train emoji for blocked
+            } else if (status === 'clear') {
+                markerColor = '#046A38'; // green
+                emoji = '📷'; // camera emoji for clear
+            } else if (status === 'checking') {
+                markerColor = '#FFB81C'; // yellow
+                emoji = '⏳'; // hourglass emoji for checking
+            } else if (status === 'error') {
+                markerColor = '#dc2626'; // red for errors
+                emoji = '❌'; // error emoji for errors
+            }
+            
+            this.se12thClintonMarker.setIcon(L.divIcon({
                 className: 'intersection-marker',
-                html: `<div style="background: ${markerColor}; width: 20px; height: 20px; border-radius: 0%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>`,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
+                html: `<div style="background: ${markerColor}; width: 60px; height: 60px; border-radius: 0%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 42px;">${emoji}</div>`,
+                iconSize: [60, 60],
+                iconAnchor: [30, 30]
             }));
         }
         
-        // Add visual feedback by updating the overlay icon
-        if (this.statusDotMarker) {
-            let dotColor = '#6b7280'; // default gray for unknown
-            if (status === 'blocked') dotColor = '#dc2626'; // red
-            else if (status === 'clear') dotColor = '#046A38'; // green
-            else if (status === 'checking') dotColor = '#FFB81C'; // yellow
-            else if (status === 'error') dotColor = '#dc2626'; // red for errors
-            
-            // Update the status dot overlay with new color
-            this.statusDotMarker.setIcon(L.divIcon({
-                className: 'status-dot-overlay',
-                html: `
-                    <div class="status-dot ${status}" style="background: ${dotColor}; transform: scale(1.1);"></div>
-                `,
-                iconSize: [80, 40],
-                iconAnchor: [40, 20]
-            }));
-            
-            // Reset the scale after animation
-            setTimeout(() => {
-                if (this.statusDotMarker) {
-                    this.statusDotMarker.setIcon(L.divIcon({
-                        className: 'status-dot-overlay',
-                        html: `
-                            <div class="status-dot ${status}" style="background: ${dotColor}; transform: scale(1);"></div>
-                        `,
-                        iconSize: [80, 40],
-                        iconAnchor: [40, 20]
-                    }));
-                }
-            }, 200);
-        }
+
         
         // Update modal status if it's open
         const modalStatus = document.getElementById('modal-status');
