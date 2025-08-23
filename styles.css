@@ -150,6 +150,11 @@ header h1:hover {
 }
 
 .status-dot-overlay .status-dot.error {
+    background: #dc2626;
+    animation: none;
+}
+
+.status-dot-overlay .status-dot.unknown {
     background: #6b7280;
     animation: none;
 }

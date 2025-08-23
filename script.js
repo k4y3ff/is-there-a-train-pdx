@@ -38,7 +38,7 @@ class TrainStatusApp {
         this.statusMarker = L.marker(config.map.center, {
             icon: L.divIcon({
                 className: 'intersection-marker',
-                html: '<div style="background: #FFB81C; width: 20px; height: 20px; border-radius: 0%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>',
+                html: '<div style="background: #6b7280; width: 20px; height: 20px; border-radius: 0%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>',
                 iconSize: [20, 20],
                 iconAnchor: [10, 10]
             })
@@ -54,11 +54,10 @@ class TrainStatusApp {
         this.statusDotOverlay = L.divIcon({
             className: 'status-dot-overlay',
             html: `
-                <div class="status-dot" id="statusDot"></div>
-                <div class="status-label" id="statusLabel">Checking...</div>
+                <div class="status-dot unknown" id="statusDot"></div>
             `,
-            iconSize: [80, 60],
-            iconAnchor: [40, 30]
+            iconSize: [80, 40],
+            iconAnchor: [40, 20]
         });
         
         // Add the status dot as a map overlay
@@ -578,18 +577,9 @@ class TrainStatusApp {
             // Show checking state
             this.setStatus('checking', 'Checking...');
             
-            // Simulate API call delay
-            await this.delay(1500);
-            
-            // For demo purposes, we'll simulate different train statuses
-            // In a real app, this would call an actual API or service
-            const trainStatus = this.simulateTrainDetection();
-            
-            if (trainStatus.isBlocking) {
-                this.setStatus('blocked', 'TRAIN BLOCKING');
-            } else {
-                this.setStatus('clear', 'CLEAR');
-            }
+            // In a real app, this would call actual APIs or services to determine train status
+            // For now, we'll set the status to unknown since we can't determine it
+            this.setStatus('unknown', 'UNKNOWN');
             
             this.updateTimestamp();
             
@@ -599,62 +589,25 @@ class TrainStatusApp {
         }
     }
     
-    simulateTrainDetection() {
-        // This is a simulation - in reality, you'd integrate with:
-        // - Portland traffic APIs
-        // - Railroad company APIs
-        // - Traffic camera feeds
-        // - User reports
-        // - Traffic signal data
-        
-        const now = new Date();
-        const hour = now.getHours();
-        const minute = now.getMinutes();
-        
-        // Simulate train patterns based on typical Portland freight train schedules
-        // Trains often run during off-peak hours and can block intersections for 5-15 minutes
-        
-        // Simulate a train blocking the intersection
-        // In reality, this would be determined by actual sensors, cameras, or traffic data
-        
-        // For demo: simulate train blocking during certain time windows
-        const isRushHour = (hour >= 7 && hour <= 9) || (hour >= 16 && hour <= 18);
-        const isTrainTime = (hour === 10 || hour === 14 || hour === 20) && minute < 30;
-        
-        // Random factor to make it more realistic
-        const randomFactor = Math.random();
-        
-        if (isTrainTime && randomFactor > 0.3) {
-            return { isBlocking: true, reason: 'Scheduled freight train' };
-        } else if (!isRushHour && randomFactor > 0.7) {
-            return { isBlocking: true, reason: 'Unexpected train delay' };
-        } else {
-            return { isBlocking: false, reason: 'No train currently blocking' };
-        }
-    }
-    
     setStatus(status, text) {
-        // Get the status dot and label elements from the map overlay
+        // Get the status dot element from the map overlay
         const statusDot = document.querySelector('.status-dot-overlay .status-dot');
-        const statusLabel = document.querySelector('.status-dot-overlay .status-label');
         
-        if (statusDot && statusLabel) {
+        if (statusDot) {
             // Remove all status classes
             statusDot.classList.remove('blocked', 'clear', 'checking', 'error');
             
             // Add new status class
             statusDot.classList.add(status);
-            
-            // Update label text
-            statusLabel.textContent = text;
         }
         
         // Update marker color based on status
         if (this.statusMarker) {
-            let markerColor = '#FFB81C'; // default yellow
+            let markerColor = '#6b7280'; // default gray for unknown
             if (status === 'blocked') markerColor = '#dc2626'; // red
             else if (status === 'clear') markerColor = '#046A38'; // green
-            else if (status === 'error') markerColor = '#6b7280'; // gray
+            else if (status === 'checking') markerColor = '#FFB81C'; // yellow
+            else if (status === 'error') markerColor = '#dc2626'; // red for errors
             
             this.statusMarker.setIcon(L.divIcon({
                 className: 'intersection-marker',
@@ -666,20 +619,20 @@ class TrainStatusApp {
         
         // Add visual feedback by updating the overlay icon
         if (this.statusDotMarker) {
-            let dotColor = '#FFB81C'; // default yellow
+            let dotColor = '#6b7280'; // default gray for unknown
             if (status === 'blocked') dotColor = '#dc2626'; // red
             else if (status === 'clear') dotColor = '#046A38'; // green
-            else if (status === 'error') dotColor = '#6b7280'; // gray
+            else if (status === 'checking') dotColor = '#FFB81C'; // yellow
+            else if (status === 'error') dotColor = '#dc2626'; // red for errors
             
-            // Update the status dot overlay with new color and text
+            // Update the status dot overlay with new color
             this.statusDotMarker.setIcon(L.divIcon({
                 className: 'status-dot-overlay',
                 html: `
                     <div class="status-dot ${status}" style="background: ${dotColor}; transform: scale(1.1);"></div>
-                    <div class="status-label">${text}</div>
                 `,
-                iconSize: [80, 60],
-                iconAnchor: [40, 30]
+                iconSize: [80, 40],
+                iconAnchor: [40, 20]
             }));
             
             // Reset the scale after animation
@@ -689,10 +642,9 @@ class TrainStatusApp {
                         className: 'status-dot-overlay',
                         html: `
                             <div class="status-dot ${status}" style="background: ${dotColor}; transform: scale(1);"></div>
-                            <div class="status-label">${text}</div>
                         `,
-                        iconSize: [80, 60],
-                        iconAnchor: [40, 30]
+                        iconSize: [80, 40],
+                        iconAnchor: [40, 20]
                     }));
                 }
             }, 200);
