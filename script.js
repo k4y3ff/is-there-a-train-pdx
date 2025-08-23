@@ -44,15 +44,11 @@ class TrainStatusApp {
             })
         }).addTo(this.map);
         
-        // Add intersection label
-        L.marker(config.map.center, {
-            icon: L.divIcon({
-                className: 'intersection-label',
-                html: '<div style="background: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; color: #1f2937; border: 1px solid #e5e7eb;">NW 9th & Naito</div>',
-                iconSize: [100, 30],
-                iconAnchor: [50, 30]
-            })
-        }).addTo(this.map);
+        // Make the intersection marker clickable to show modal
+        this.statusMarker.on('click', () => {
+            console.log('🎯 Intersection marker clicked directly');
+            this.showIntersectionModal();
+        });
         
         // Create status dot overlay that stays centered on the intersection
         this.statusDotOverlay = L.divIcon({
@@ -71,8 +67,8 @@ class TrainStatusApp {
             interactive: false
         }).addTo(this.map);
         
-        // Add click handler to refresh status
-        this.map.on('click', () => this.checkTrainStatus());
+        // Remove the general map click handler since we have direct marker click handling
+        // this.map.on('click', (e) => this.showIntersectionInfo(e));
         
         // Force map to resize after initialization to ensure proper height
         setTimeout(() => {
@@ -467,6 +463,35 @@ class TrainStatusApp {
         return marker;
     }
     
+
+    
+    showIntersectionModal() {
+        const modal = document.getElementById('intersectionModal');
+        if (modal) {
+            modal.style.display = 'block';
+            console.log('📱 Opening intersection information modal');
+        }
+    }
+    
+    showIntersectionInfo(e) {
+        // Check if click is near the intersection marker
+        const markerLatLng = this.statusMarker.getLatLng();
+        const clickLatLng = e.latlng;
+        const distance = markerLatLng.distanceTo(clickLatLng);
+        
+        console.log('🗺️ Map clicked at:', clickLatLng);
+        console.log('📍 Intersection marker at:', markerLatLng);
+        console.log('📏 Distance:', distance, 'meters');
+        
+        // If click is within 50 meters of the intersection, show the popup
+        if (distance < 50) {
+            console.log('✅ Click near intersection, opening popup');
+            this.statusMarker.openPopup();
+        } else {
+            console.log('❌ Click too far from intersection');
+        }
+    }
+    
     addMaxTrainLegend() {
         const legend = L.control({ position: 'bottomright' });
         
@@ -511,6 +536,39 @@ class TrainStatusApp {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'r' || e.key === 'R') {
                 this.checkTrainStatus();
+            }
+        });
+        
+        // Add modal event handlers
+        this.setupModalHandlers();
+    }
+    
+    setupModalHandlers() {
+        const modal = document.getElementById('intersectionModal');
+        const closeBtn = document.querySelector('.close-modal');
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+                console.log('❌ Closing intersection modal');
+            });
+        }
+        
+        // Close modal when clicking outside of it
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    console.log('❌ Closing intersection modal (clicked outside)');
+                }
+            });
+        }
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.style.display === 'block') {
+                modal.style.display = 'none';
+                console.log('❌ Closing intersection modal (Escape key)');
             }
         });
     }
@@ -638,6 +696,12 @@ class TrainStatusApp {
                     }));
                 }
             }, 200);
+        }
+        
+        // Update modal status if it's open
+        const modalStatus = document.getElementById('modal-status');
+        if (modalStatus) {
+            modalStatus.textContent = text;
         }
     }
     

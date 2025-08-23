@@ -69,6 +69,46 @@
         </footer>
     </div>
     
+    <!-- Intersection Information Modal -->
+    <div id="intersectionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🚂 NW 9th & Naito Intersection</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h3>📍 Location</h3>
+                    <p>NW 9th Avenue & NW Naito Parkway<br>
+                    Portland, Oregon 97209</p>
+                    <p><strong>Coordinates:</strong> 45.532533, -122.680120</p>
+                </div>
+                <div class="modal-section">
+                    <h3>🚧 Train Crossing</h3>
+                    <p>This intersection is crossed by Union Pacific Railroad tracks, 
+                    which can block traffic for 5-15 minutes when freight trains pass through.</p>
+                </div>
+                <div class="modal-section">
+                    <h3>⏰ Typical Train Times</h3>
+                    <p>• Morning: 7:00 AM - 9:00 AM<br>
+                    • Afternoon: 2:00 PM - 4:00 PM<br>
+                    • Evening: 8:00 PM - 10:00 PM</p>
+                </div>
+                <div class="modal-section">
+                    <h3>🚇 MAX Transit</h3>
+                    <p>Nearby MAX stations:<br>
+                    • Old Town/Chinatown (Red/Blue lines)<br>
+                    • Skidmore Fountain (Red/Blue lines)</p>
+                </div>
+                <div class="modal-section">
+                    <h3>🔄 Current Status</h3>
+                    <p id="modal-status">Checking...</p>
+                    <button onclick="refreshStatus()" class="refresh-btn">Refresh Status</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="config.js"></script>
     <script src="script.js"></script>
