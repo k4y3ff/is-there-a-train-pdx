@@ -367,7 +367,7 @@ class TrainStatusApp {
             color: this.getLineColor(vehicle.routeNumber),
             lat: parseFloat(vehicle.latitude) || 0,
             lng: parseFloat(vehicle.longitude) || 0,
-            direction: vehicle.direction || 'Unknown',
+            direction: this.getDirectionName(vehicle.direction) || 'Unknown',
             speed: vehicle.speed ? Math.round(vehicle.speed * 2.237) : 0, // Convert m/s to mph
             nextStop: vehicle.nextStop || 'Unknown',
             passengers: vehicle.passengerCount || 'Unknown'
@@ -382,7 +382,7 @@ class TrainStatusApp {
             color: this.getLineColor(arrival.route),
             lat: parseFloat(arrival.latitude) || 0,
             lng: parseFloat(arrival.longitude) || 0,
-            direction: arrival.direction || 'Unknown',
+            direction: this.getDirectionName(arrival.direction) || 'Unknown',
             speed: arrival.speed ? Math.round(arrival.speed * 2.237) : 0, // Convert m/s to mph
             nextStop: arrival.nextStop || 'Unknown',
             passengers: arrival.passengerCount || 'Unknown'
@@ -409,6 +409,32 @@ class TrainStatusApp {
             '290': '#ea580c'  // Orange
         };
         return colorMap[routeNumber] || '#6b7280';
+    }
+    
+    getDirectionName(directionCode) {
+        // Convert TriMet direction codes to readable names
+        const directionMap = {
+            '0': 'Eastbound',
+            '1': 'Westbound',
+            '2': 'Northbound',
+            '3': 'Southbound',
+            '4': 'Clockwise',
+            '5': 'Counter-clockwise',
+            '6': 'Inbound',
+            '7': 'Outbound',
+            '8': 'Northbound',
+            '9': 'Southbound',
+            '10': 'Eastbound',
+            '11': 'Westbound'
+        };
+        
+        // If it's already a readable string, return it
+        if (typeof directionCode === 'string' && !directionMap[directionCode]) {
+            return directionCode;
+        }
+        
+        // Convert numeric codes to readable names
+        return directionMap[directionCode] || 'Unknown Direction';
     }
     
     createMaxTrainMarker(train) {
