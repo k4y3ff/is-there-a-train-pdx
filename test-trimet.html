@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TriMet API Test</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .test-button {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0284c7;
+        }
+        .results {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error {
+            background: #fee2e2;
+            border-color: #dc2626;
+            color: #dc2626;
+        }
+        .success {
+            background: #dcfce7;
+            border-color: #16a34a;
+            color: #16a34a;
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .back-link a {
+            color: #0ea5e9;
+            text-decoration: none;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 TriMet API Test</h1>
+        
+        <div class="test-section">
+            <h3>API Configuration</h3>
+            <p><strong>App ID:</strong> <span id="appId">Loading...</span></p>
+            <p><strong>Base URL:</strong> <span id="baseUrl">Loading...</span></p>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test Endpoints</h3>
+            <button class="test-button" onclick="testRoutes()">Test Routes Endpoint</button>
+            <button class="test-button" onclick="testVehicles()">Test Vehicles Endpoint</button>
+            <button class="test-button" onclick="testArrivals()">Test Arrivals Endpoint</button>
+            <button class="test-button" onclick="testAlternativeEndpoints()">Test Alternative Endpoints</button>
+            <button class="test-button" onclick="testBaseURLs()">Test Base URLs</button>
+            <button class="test-button" onclick="testAll()">Test All Endpoints</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>Results</h3>
+            <div id="results" class="results">Click a test button to see results...</div>
+        </div>
+        
+        <div class="back-link">
+            <a href="index.html">← Back to Train Status App</a>
+        </div>
+    </div>
+    
+    <script src="config.js"></script>
+    <script>
+        // Display configuration
+        document.getElementById('appId').textContent = config.trimet.appId;
+        document.getElementById('baseUrl').textContent = config.trimet.baseUrl;
+        
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            
+            if (type === 'error') {
+                results.className = 'results error';
+            } else if (type === 'success') {
+                results.className = 'results success';
+            } else {
+                results.className = 'results';
+            }
+            
+            results.textContent += logEntry;
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        async function testEndpoint(endpoint, name) {
+            try {
+                log(`🔍 Testing ${name}...`);
+                log(`📡 URL: ${endpoint}`);
+                
+                const response = await fetch(endpoint);
+                log(`📊 Status: ${response.status} ${response.statusText}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ ${name} successful!`);
+                    log(`📦 Response structure: ${JSON.stringify(Object.keys(data), null, 2)}`);
+                    
+                    if (data.resultSet) {
+                        log(`📊 ResultSet keys: ${Object.keys(data.resultSet).join(', ')}`);
+                        
+                        if (data.resultSet.vehicle) {
+                            log(`🚇 Vehicle count: ${data.resultSet.vehicle.length}`);
+                            if (data.resultSet.vehicle.length > 0) {
+                                log(`📋 Sample vehicle: ${JSON.stringify(data.resultSet.vehicle[0], null, 2)}`);
+                            }
+                        }
+                        
+                        if (data.resultSet.arrival) {
+                            log(`🚇 Arrival count: ${data.resultSet.arrival.length}`);
+                        }
+                        
+                        if (data.resultSet.route) {
+                            log(`🚇 Route count: ${data.resultSet.route.length}`);
+                        }
+                    }
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ ${name} failed: ${response.status}`, 'error');
+                    log(`📋 Error response: ${errorText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ ${name} error: ${error.message}`, 'error');
+                
+                if (error.message.includes('CORS')) {
+                    log(`🚫 CORS issue detected! TriMet API may not support browser requests.`, 'error');
+                }
+            }
+            
+            log('---');
+        }
+        
+        async function testRoutes() {
+            const endpoints = [
+                `${config.trimet.baseUrl}/routes/?appID=${config.trimet.appId}`,
+                `${config.trimet.baseUrl}/routes/?appID=${config.trimet.appId}&format=json`,
+                `${config.trimet.baseUrl}/routes/?appID=${config.trimet.appId}&json=true`
+            ];
+            
+            for (const endpoint of endpoints) {
+                await testEndpoint(endpoint, `Routes (${endpoint.includes('format=json') ? 'JSON' : 'default'})`);
+            }
+        }
+        
+        async function testVehicles() {
+            const endpoints = [
+                `${config.trimet.baseUrl}/vehicles/?appID=${config.trimet.appId}`,
+                `${config.trimet.baseUrl}/vehicles/?appID=${config.trimet.appId}&format=json`,
+                `${config.trimet.baseUrl}/vehicles/?appID=${config.trimet.appId}&json=true`
+            ];
+            
+            for (const endpoint of endpoints) {
+                await testEndpoint(endpoint, `Vehicles (${endpoint.includes('format=json') ? 'JSON' : 'default'})`);
+            }
+        }
+        
+        async function testArrivals() {
+            const endpoints = [
+                `${config.trimet.baseUrl}/arrivals/?appID=${config.trimet.appId}`,
+                `${config.trimet.baseUrl}/arrivals/?appID=${config.trimet.appId}&format=json`,
+                `${config.trimet.baseUrl}/arrivals/?appID=${config.trimet.appId}&json=true`
+            ];
+            
+            for (const endpoint of endpoints) {
+                await testEndpoint(endpoint, `Arrivals (${endpoint.includes('format=json') ? 'JSON' : 'default'})`);
+            }
+        }
+        
+        async function testAlternativeEndpoints() {
+            log('🧪 Testing alternative endpoints...');
+            
+            const alternativeEndpoints = [
+                `${config.trimet.baseUrl}/vehicleLocations/?appID=${config.trimet.appId}`,
+                `${config.trimet.baseUrl}/arrivalTimes/?appID=${config.trimet.appId}`,
+                `${config.trimet.baseUrl}/routeConfig/?appID=${config.trimet.appId}`,
+                `${config.trimet.baseUrl}/stops/?appID=${config.trimet.appId}`
+            ];
+            
+            for (const endpoint of alternativeEndpoints) {
+                await testEndpoint(endpoint, 'Alternative');
+            }
+        }
+        
+        async function testAll() {
+            log('🧪 Running all tests...');
+            await testRoutes();
+            await testVehicles();
+            await testArrivals();
+            await testAlternativeEndpoints();
+            log('✅ All tests completed!');
+        }
+        
+        async function testBaseURLs() {
+            log('🧪 Testing different base URLs...');
+            
+            const baseURLs = [
+                'https://developer.trimet.org/ws',
+                'https://developer.trimet.org/ws/V1',
+                'https://developer.trimet.org/ws/v1',
+                'https://developer.trimet.org/ws/V2',
+                'https://developer.trimet.org/ws/v2',
+                'https://developer.trimet.org/api',
+                'https://developer.trimet.org/api/v1'
+            ];
+            
+            for (const baseURL of baseURLs) {
+                log(`🔍 Testing base URL: ${baseURL}`);
+                const testUrl = `${baseURL}/routes/?appID=${config.trimet.appId}`;
+                await testEndpoint(testUrl, `Base URL: ${baseURL}`);
+            }
+        }
+    </script>
+</body>
+</html> 

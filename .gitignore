@@ -17,6 +17,11 @@ out/
 .env.test.local
 .env.production.local
 
+# Configuration files with sensitive data
+config.js
+config.local.js
+secrets.js
+
 # IDE and editor files
 .vscode/
 .idea/

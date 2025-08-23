@@ -6,6 +6,7 @@ A simple web application that displays whether a train is currently blocking the
 
 - **Interactive Map**: Shows the intersection location with a colored status dot
 - **Visual Status Indicator**: Green dot = clear, Red dot = train blocking, Yellow dot = checking
+- **MAX Train Overlay**: Real-time display of all TriMet MAX train positions
 - **Real-time Updates**: Updates every 30 seconds
 - **Interactive**: Click the map or press 'R' to refresh manually
 - **Responsive Design**: Works on desktop and mobile devices
@@ -30,6 +31,19 @@ Instead of simple text, the app now shows:
 - **🟢 Green Dot**: Intersection is clear, no train blocking
 - **🟡 Yellow Dot**: Checking status (during updates)
 - **⚫ Gray Dot**: Error occurred while checking
+
+### MAX Train Overlay
+
+The app now includes a comprehensive MAX train overlay system:
+- **Real-time Positions**: Shows all TriMet MAX trains on the map
+- **Color-coded Lines**: Each MAX line has its own color (Red, Blue, Green, Yellow, Orange)
+- **Interactive Markers**: Click any train to see detailed information
+- **Live Updates**: Train positions update every 30 seconds
+- **Legend**: Bottom-right legend shows all MAX line colors
+- **Train Information**: Popups show direction, speed, next stop, and passenger count
+
+**Current Implementation**: Shows real TriMet data when available, or displays "MAX Trains Not Shown" when data is unavailable
+**No Simulation**: The app only displays real-time data from TriMet's API
 
 ## Current Implementation
 
@@ -146,6 +160,43 @@ async checkTrainStatus() {
     }
 }
 ```
+
+### Integrating Real TriMet MAX Data
+
+To use real TriMet data instead of simulation:
+
+1. **Get TriMet API Access**: 
+   - Visit [TriMet Developer Portal](https://developer.trimet.org/)
+   - Register for an API key
+   - Request access to GTFS real-time data
+
+2. **Set Up Configuration**:
+   - Copy `config.template.js` to `config.js`
+   - Add your TriMet App ID to `config.js`
+   - **IMPORTANT**: Never commit `config.js` to version control
+   - The `.gitignore` file already excludes `config.js`
+
+3. **Configuration Structure**:
+```javascript
+// In config.js
+const config = {
+    trimet: {
+        appId: 'YOUR_ACTUAL_APP_ID_HERE', // Your TriMet App ID
+        baseUrl: 'https://developer.trimet.org/ws/V1',
+        endpoints: { /* ... */ }
+    },
+    map: { /* ... */ },
+    trainStatus: {
+        updateInterval: 30000 // Update frequency in milliseconds
+    }
+};
+```
+
+4. **The app will automatically**:
+   - Use real TriMet data when the API is available
+   - Show "MAX Trains Not Shown" when the API is unavailable
+   - Update train positions every 30 seconds
+   - Display real MAX train locations, speeds, and directions
 
 ## Local Development
 

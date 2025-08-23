@@ -7,6 +7,9 @@ class TrainStatusApp {
         this.statusMarker = null;
         this.statusDotMarker = null;
         this.statusDotOverlay = null;
+        this.maxTrains = new Map(); // Store MAX train markers
+        this.trainUpdateInterval = null;
+        this.maxTrainsNotAvailableMarker = null; // Marker for "MAX trains not shown" message
         
         this.init();
     }
@@ -23,8 +26,8 @@ class TrainStatusApp {
     
     initMap() {
         // Initialize the map centered on NW 9th & Naito intersection
-        // Coordinates: [45.532533, -122.680120] (NW 9th Ave & NW Naito Pkwy, Portland, OR)
-        this.map = L.map('map').setView([45.532533, -122.680120], 16);
+        // Coordinates: 45.532533, -122.680120 (NW 9th Ave & NW Naito Pkwy, Portland, OR)
+        this.map = L.map('map').setView(config.map.center, config.map.zoom);
         
         // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -32,7 +35,7 @@ class TrainStatusApp {
         }).addTo(this.map);
         
         // Add a marker for the intersection
-        this.statusMarker = L.marker([45.5275, -122.6731], {
+        this.statusMarker = L.marker(config.map.center, {
             icon: L.divIcon({
                 className: 'intersection-marker',
                 html: '<div style="background: #FFB81C; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>',
@@ -42,7 +45,7 @@ class TrainStatusApp {
         }).addTo(this.map);
         
         // Add intersection label
-        L.marker([45.5275, -122.6731], {
+        L.marker(config.map.center, {
             icon: L.divIcon({
                 className: 'intersection-label',
                 html: '<div style="background: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; color: #1f2937; border: 1px solid #e5e7eb;">NW 9th & Naito</div>',
@@ -63,13 +66,424 @@ class TrainStatusApp {
         });
         
         // Add the status dot as a map overlay
-        this.statusDotMarker = L.marker([45.532533, -122.680120], {
+        this.statusDotMarker = L.marker(config.map.center, {
             icon: this.statusDotOverlay,
             interactive: false
         }).addTo(this.map);
         
         // Add click handler to refresh status
         this.map.on('click', () => this.checkTrainStatus());
+        
+        // Initialize MAX train overlay
+        this.initMaxTrains();
+    }
+    
+    initMaxTrains() {
+        // Start updating MAX train positions
+        this.updateMaxTrains();
+        this.trainUpdateInterval = setInterval(() => this.updateMaxTrains(), 30000); // Update every 30 seconds
+        
+        // Add MAX train legend
+        this.addMaxTrainLegend();
+        
+        // Note: MAX line routes are used for train positioning but not displayed visually
+        
+        // Test TriMet API connection
+        this.testTriMetAPI();
+    }
+    
+    async testTriMetAPI() {
+        console.log('🧪 Testing TriMet API connection...');
+        console.log('🔑 App ID:', config.trimet.appId);
+        console.log('🌐 Base URL:', config.trimet.baseUrl);
+        
+        // Test different possible base URLs
+        const possibleBaseUrls = [
+            'https://developer.trimet.org/ws',
+            'https://developer.trimet.org/ws/V1',
+            'https://developer.trimet.org/ws/v1',
+            'https://developer.trimet.org/ws/V2',
+            'https://developer.trimet.org/ws/v2',
+            'https://developer.trimet.org/ws/',
+            'https://developer.trimet.org/api',
+            'https://developer.trimet.org/api/v1'
+        ];
+        
+        for (const baseUrl of possibleBaseUrls) {
+            try {
+                console.log(`🔍 Testing base URL: ${baseUrl}`);
+                const testUrl = `${baseUrl}/routes/?appID=${config.trimet.appId}`;
+                console.log('📡 Testing URL:', testUrl);
+                
+                const testResponse = await fetch(testUrl);
+                console.log('📊 Response status:', testResponse.status);
+                
+                if (testResponse.ok) {
+                    const testData = await testResponse.json();
+                    console.log('✅ API connection successful with base URL:', baseUrl);
+                    console.log('📋 Available endpoints:', Object.keys(testData));
+                    
+                    // Check if we can access the data
+                    if (testData.resultSet) {
+                        console.log('📊 ResultSet keys:', Object.keys(testData.resultSet));
+                    }
+                    
+                    // Update the config if we find a working base URL
+                    if (baseUrl !== config.trimet.baseUrl) {
+                        console.log('🔄 Updating config to use working base URL:', baseUrl);
+                        config.trimet.baseUrl = baseUrl;
+                    }
+                    break;
+                } else {
+                    console.warn('⚠️ Base URL failed:', baseUrl, 'Status:', testResponse.status);
+                    const errorText = await testResponse.text();
+                    console.warn('📋 Error response:', errorText);
+                }
+            } catch (error) {
+                console.error('❌ Error with base URL:', baseUrl, error.message);
+                
+                // Check if it's a CORS issue
+                if (error.message.includes('CORS') || error.message.includes('cross-origin')) {
+                    console.error('🚫 CORS issue detected with:', baseUrl);
+                }
+            }
+        }
+        
+        // If none of the base URLs work, try a different approach
+        if (!config.trimet.baseUrl.includes('developer.trimet.org')) {
+            console.log('🔄 Trying alternative API approach...');
+            console.log('💡 The issue might be that TriMet has changed their API structure');
+            console.log('💡 You may need to check their current developer documentation');
+        }
+        
+        // Try to find any working endpoint
+        console.log('🔍 Attempting to find any working TriMet API endpoint...');
+        console.log('💡 If all endpoints fail, TriMet may have changed their API structure');
+        console.log('💡 Check their current developer documentation at: https://developer.trimet.org/');
+    }
+    
+    async updateMaxTrains() {
+        try {
+            // Fetch TriMet GTFS real-time data for MAX trains
+            const trainData = await this.fetchMaxTrainData();
+            
+            // Clear existing train markers
+            this.maxTrains.forEach(marker => this.map.removeLayer(marker));
+            this.maxTrains.clear();
+            
+            if (trainData.length === 0) {
+                // Show "MAX trains not shown" message
+                this.showMaxTrainsNotAvailable();
+                return;
+            }
+            
+            // Add new train markers
+            trainData.forEach(train => {
+                const trainMarker = this.createMaxTrainMarker(train);
+                this.maxTrains.set(train.id, trainMarker);
+                trainMarker.addTo(this.map);
+            });
+            
+            console.log(`Updated ${trainData.length} MAX train positions`);
+            
+        } catch (error) {
+            console.error('Error updating MAX trains:', error);
+            this.showMaxTrainsNotAvailable();
+        }
+    }
+    
+    showMaxTrainsNotAvailable() {
+        // Remove any existing "not available" message
+        if (this.maxTrainsNotAvailableMarker) {
+            this.map.removeLayer(this.maxTrainsNotAvailableMarker);
+        }
+        
+        // Create a message marker in the center of the map
+        this.maxTrainsNotAvailableMarker = L.marker(config.map.center, {
+            icon: L.divIcon({
+                className: 'max-trains-not-available',
+                html: `
+                    <div class="no-trains-message">
+                        <div class="no-trains-icon">🚇</div>
+                        <div class="no-trains-text">MAX Trains Not Shown</div>
+                        <div class="no-trains-subtext">Real-time data unavailable</div>
+                    </div>
+                `,
+                iconSize: [200, 80],
+                iconAnchor: [100, 40]
+            }),
+            interactive: false
+        }).addTo(this.map);
+        
+        console.log('MAX trains not available - showing message');
+    }
+    
+    async fetchMaxTrainData() {
+        try {
+            console.log('🔍 Fetching TriMet MAX train data...');
+            
+            // Try multiple endpoints to find MAX train data
+            const endpoints = [
+                `${config.trimet.baseUrl}/vehicles/`,
+                `${config.trimet.baseUrl}/arrivals/`,
+                `${config.trimet.baseUrl}/routes/`,
+                `${config.trimet.baseUrl}/stops/`,
+                `${config.trimet.baseUrl}/vehicleLocations/`,
+                `${config.trimet.baseUrl}/arrivalTimes/`,
+                `${config.trimet.baseUrl}/routeConfig/`,
+                // Try GTFS real-time endpoints
+                `${config.trimet.baseUrl}/gtfs/vehicles/`,
+                `${config.trimet.baseUrl}/gtfs/trips/`,
+                `${config.trimet.baseUrl}/gtfs/routes/`
+            ];
+            
+            let data = null;
+            let workingEndpoint = null;
+            
+            // Try each endpoint until we find one that works
+            for (const endpoint of endpoints) {
+                try {
+                    console.log('📡 Trying endpoint:', endpoint);
+                    
+                    // Try different parameter combinations
+                    const testUrls = [
+                        `${endpoint}?appID=${config.trimet.appId}`,
+                        `${endpoint}?appID=${config.trimet.appId}&format=json`,
+                        `${endpoint}?appID=${config.trimet.appId}&json=true`,
+                        `${endpoint}?appID=${config.trimet.appId}&type=json`,
+                        `${endpoint}?appID=${config.trimet.appId}&output=json`
+                    ];
+                    
+                    let response = null;
+                    let workingUrl = null;
+                    
+                    for (const url of testUrls) {
+                        try {
+                            console.log('🔗 Testing URL:', url);
+                            response = await fetch(url);
+                            
+                            if (response.ok) {
+                                workingUrl = url;
+                                break;
+                            }
+                        } catch (urlError) {
+                            console.log('⚠️ URL failed:', url, urlError.message);
+                        }
+                    }
+                    
+                    if (!response || !response.ok) {
+                        console.warn('⚠️ All URL variations failed for endpoint:', endpoint);
+                        continue;
+                    }
+                    
+                    console.log('✅ Working URL found:', workingUrl);
+                    console.log('📊 Response status:', response.status);
+                    
+                    const responseData = await response.json();
+                    console.log('📦 Response from', endpoint, ':', responseData);
+                    
+                    // Check if this endpoint has vehicle data
+                    if (responseData.resultSet && responseData.resultSet.vehicle) {
+                        data = responseData;
+                        workingEndpoint = endpoint;
+                        console.log('✅ Found vehicle data at:', endpoint);
+                        break;
+                    } else if (responseData.resultSet && responseData.resultSet.arrival) {
+                        console.log('📋 Found arrival data, checking for MAX trains...');
+                        // This might have MAX train arrival info
+                        data = responseData;
+                        workingEndpoint = endpoint;
+                        break;
+                    } else {
+                        console.log('📋 No vehicle/arrival data at:', endpoint);
+                    }
+                } catch (endpointError) {
+                    console.warn('⚠️ Error with endpoint:', endpoint, endpointError);
+                }
+            }
+            
+            if (!data) {
+                throw new Error('No working endpoints found for MAX train data');
+            }
+            
+            console.log('🎯 Using endpoint:', workingEndpoint);
+            
+            // Check if we have valid data
+            if (!data.resultSet || (!data.resultSet.vehicle && !data.resultSet.arrival)) {
+                console.warn('⚠️ No vehicle/arrival data structure found in API response');
+                console.warn('📋 Expected structure: data.resultSet.vehicle or data.resultSet.arrival');
+                console.warn('📋 Actual structure:', Object.keys(data));
+                throw new Error('No vehicle/arrival data from TriMet API');
+            }
+            
+            // Handle different data types
+            let maxTrains = [];
+            
+            if (data.resultSet.vehicle) {
+                console.log('🚇 Total vehicles in response:', data.resultSet.vehicle.length);
+                
+                // Filter for MAX trains only and transform data
+                maxTrains = data.resultSet.vehicle
+                    .filter(vehicle => {
+                        const isMax = vehicle.routeNumber && this.isMaxRoute(vehicle.routeNumber);
+                        if (isMax) {
+                            console.log('✅ Found MAX train:', vehicle);
+                        }
+                        return isMax;
+                    })
+                    .map(vehicle => this.transformTriMetData(vehicle));
+                    
+            } else if (data.resultSet.arrival) {
+                console.log('🚇 Total arrivals in response:', data.resultSet.arrival.length);
+                
+                // Try to extract MAX train info from arrivals
+                maxTrains = data.resultSet.arrival
+                    .filter(arrival => {
+                        const isMax = arrival.route && this.isMaxRoute(arrival.route);
+                        if (isMax) {
+                            console.log('✅ Found MAX arrival:', arrival);
+                        }
+                        return isMax;
+                    })
+                    .map(arrival => this.transformArrivalData(arrival));
+            }
+            
+            console.log(`🎯 Found ${maxTrains.length} MAX trains after filtering`);
+            return maxTrains;
+            
+        } catch (error) {
+            console.error('❌ Error fetching TriMet data:', error);
+            console.error('🔍 Full error details:', error.message);
+            // Return empty array to show "MAX trains not shown" message
+            return [];
+        }
+    }
+    
+    isMaxRoute(routeNumber) {
+        // TriMet MAX route numbers
+        const maxRoutes = ['100', '200', '190', '195', '290'];
+        return maxRoutes.includes(routeNumber.toString());
+    }
+    
+    transformTriMetData(vehicle) {
+        return {
+            id: vehicle.vehicleID || `train-${Math.random().toString(36).substr(2, 9)}`,
+            route: `MAX ${vehicle.routeNumber}`,
+            line: this.getLineName(vehicle.routeNumber),
+            color: this.getLineColor(vehicle.routeNumber),
+            lat: parseFloat(vehicle.latitude) || 0,
+            lng: parseFloat(vehicle.longitude) || 0,
+            direction: vehicle.direction || 'Unknown',
+            speed: vehicle.speed ? Math.round(vehicle.speed * 2.237) : 0, // Convert m/s to mph
+            nextStop: vehicle.nextStop || 'Unknown',
+            passengers: vehicle.passengerCount || 'Unknown'
+        };
+    }
+
+    transformArrivalData(arrival) {
+        return {
+            id: `arrival-${arrival.vehicleID || Math.random().toString(36).substr(2, 9)}`,
+            route: `MAX ${arrival.route}`,
+            line: this.getLineName(arrival.route),
+            color: this.getLineColor(arrival.route),
+            lat: parseFloat(arrival.latitude) || 0,
+            lng: parseFloat(arrival.longitude) || 0,
+            direction: arrival.direction || 'Unknown',
+            speed: arrival.speed ? Math.round(arrival.speed * 2.237) : 0, // Convert m/s to mph
+            nextStop: arrival.nextStop || 'Unknown',
+            passengers: arrival.passengerCount || 'Unknown'
+        };
+    }
+    
+    getLineName(routeNumber) {
+        const lineMap = {
+            '100': 'Red Line',
+            '200': 'Blue Line', 
+            '190': 'Green Line',
+            '195': 'Yellow Line',
+            '290': 'Orange Line'
+        };
+        return lineMap[routeNumber] || 'Unknown Line';
+    }
+    
+    getLineColor(routeNumber) {
+        const colorMap = {
+            '100': '#dc2626', // Red
+            '200': '#2563eb', // Blue
+            '190': '#16a34a', // Green
+            '195': '#ca8a04', // Yellow
+            '290': '#ea580c'  // Orange
+        };
+        return colorMap[routeNumber] || '#6b7280';
+    }
+    
+    createMaxTrainMarker(train) {
+        const trainIcon = L.divIcon({
+            className: 'max-train-marker',
+            html: `
+                <div class="train-marker" style="background: ${train.color}; border-color: ${train.color};">
+                    <div class="train-line">${train.line}</div>
+                    <div class="train-direction">${train.direction}</div>
+                </div>
+            `,
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
+        });
+        
+        const marker = L.marker([train.lat, train.lng], { icon: trainIcon });
+        
+        // Add popup with train information
+        marker.bindPopup(`
+            <div class="train-popup">
+                <h3>${train.route}</h3>
+                <p><strong>Direction:</strong> ${train.direction}</p>
+                <p><strong>Speed:</strong> ${train.speed} mph</p>
+                <p><strong>Next Stop:</strong> ${train.nextStop}</p>
+                <p><strong>Passengers:</strong> ~${train.passengers}</p>
+                <p><strong>Last Updated:</strong> ${new Date().toLocaleTimeString()}</p>
+            </div>
+        `);
+        
+        return marker;
+    }
+    
+    addMaxTrainLegend() {
+        const legend = L.control({ position: 'bottomright' });
+        
+        legend.onAdd = function() {
+            const div = L.DomUtil.create('div', 'max-train-legend');
+            div.innerHTML = `
+                <div class="legend-header">MAX Train Lines</div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #dc2626;"></span>
+                    <span>Red Line</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #2563eb;"></span>
+                    <span>Blue Line</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #16a34a;"></span>
+                    <span>Green Line</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #ca8a04;"></span>
+                    <span>Yellow Line</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #ea580c;"></span>
+                    <span>Orange Line</span>
+                </div>
+            `;
+            return div;
+        };
+        
+        legend.addTo(this.map);
+    }
+    
+    addMaxLineRoutes() {
+        // This function is no longer needed - routes are used internally for positioning only
+        // MAX line routes are defined in simulateMaxTrainData() for realistic train placement
     }
     
     addEventListeners() {

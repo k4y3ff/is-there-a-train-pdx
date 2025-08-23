@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coordinate Finder - NW 9th & Naito</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .instructions {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #0c4a6e;
+        }
+        .coordinates {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 16px;
+            text-align: center;
+        }
+        #map {
+            width: 100%;
+            height: 400px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .back-link a {
+            color: #0ea5e9;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ Coordinate Finder</h1>
+        
+        <div class="instructions">
+            <strong>Instructions:</strong> Click anywhere on the map to find the exact coordinates. 
+            Look for the NW 9th Ave and NW Naito Pkwy intersection in Portland, OR, and click on it to get the precise coordinates.
+        </div>
+        
+        <div class="coordinates" id="coordinates">
+            Click on the map to find coordinates...
+        </div>
+        
+        <div id="map"></div>
+        
+        <div class="back-link">
+            <a href="index.html">← Back to Train Status App</a>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map centered on Portland
+        const map = L.map('map').setView([45.52, -122.68], 15);
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Add a marker for the approximate current location
+        const currentMarker = L.marker([45.5275, -122.6731], {
+            icon: L.divIcon({
+                className: 'current-marker',
+                html: '<div style="background: #f59e0b; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(map);
+        
+        // Add label for current marker
+        L.marker([45.5275, -122.6731], {
+            icon: L.divIcon({
+                className: 'current-label',
+                html: '<div style="background: rgba(245, 158, 11, 0.9); padding: 5px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; color: white; border: 1px solid #f59e0b;">Current Coordinates</div>',
+                iconSize: [150, 30],
+                iconAnchor: [75, 30]
+            })
+        }).addTo(map);
+        
+        // Add click handler to find coordinates
+        map.on('click', function(e) {
+            const lat = e.latlng.lat.toFixed(6);
+            const lng = e.latlng.lng.toFixed(6);
+            
+            // Update coordinates display
+            document.getElementById('coordinates').innerHTML = `
+                <strong>Coordinates:</strong> [${lat}, ${lng}]<br>
+                <small>Latitude: ${lat}, Longitude: ${lng}</small>
+            `;
+            
+            // Add a temporary marker at clicked location
+            const tempMarker = L.marker([lat, lng], {
+                icon: L.divIcon({
+                    className: 'temp-marker',
+                    html: '<div style="background: #dc2626; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8]
+                })
+            }).addTo(map);
+            
+            // Remove temporary marker after 3 seconds
+            setTimeout(() => {
+                map.removeLayer(tempMarker);
+            }, 3000);
+        });
+        
+        // Add search box for easy navigation
+        const searchBox = L.control({position: 'topright'});
+        searchBox.onAdd = function() {
+            const div = L.DomUtil.create('div', 'search-box');
+            div.innerHTML = `
+                <input type="text" id="searchInput" placeholder="Search for NW 9th & Naito..." 
+                       style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 200px;">
+                <button onclick="searchLocation()" style="padding: 8px 12px; background: #0ea5e9; color: white; border: none; border-radius: 4px; cursor: pointer;">Search</button>
+            `;
+            return div;
+        };
+        searchBox.addTo(map);
+        
+        function searchLocation() {
+            const searchTerm = document.getElementById('searchInput').value;
+            if (searchTerm.toLowerCase().includes('nw 9th') || searchTerm.toLowerCase().includes('naito')) {
+                // Center map on the approximate intersection area
+                map.setView([45.5275, -122.6731], 18);
+                document.getElementById('coordinates').innerHTML = `
+                    <strong>Searching for:</strong> ${searchTerm}<br>
+                    <small>Map centered on approximate NW 9th & Naito area</small>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 
