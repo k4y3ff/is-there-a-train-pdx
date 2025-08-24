@@ -10,12 +10,17 @@ class TrainStatusApp {
         this.maxTrains = new Map(); // Store MAX train markers
         this.trainUpdateInterval = null;
         this.maxTrainsNotAvailableMarker = null; // Marker for "MAX trains not shown" message
+        this.tensorFlowModel = null; // TensorFlow.js model for train detection
         
         this.init();
     }
     
     init() {
         this.initMap();
+        
+        // Preload TensorFlow.js model in background
+        this.preloadTensorFlowModel();
+        
         // Initial train status check with CCTV analysis
         setTimeout(() => this.checkTrainStatus(), 2000); // Wait for map to load first
         // Check status every 30 seconds
@@ -23,6 +28,16 @@ class TrainStatusApp {
         
         // Add some interactivity
         this.addEventListeners();
+    }
+    
+    async preloadTensorFlowModel() {
+        try {
+            console.log('🚀 Preloading TensorFlow.js model...');
+            await this.loadTensorFlowModel();
+            console.log('✅ TensorFlow.js model preloaded successfully');
+        } catch (error) {
+            console.warn('⚠️ Could not preload TensorFlow model:', error);
+        }
     }
     
     initMap() {
@@ -655,7 +670,96 @@ class TrainStatusApp {
     
     async analyzeCCTVForTrains() {
         try {
-            console.log('🔍 Analyzing CCTV feed for train detection...');
+            console.log('🔍 Analyzing CCTV feed for train detection using TensorFlow.js...');
+            
+            // Ensure TensorFlow model is loaded
+            if (!this.tensorFlowModel) {
+                console.log('📚 Loading TensorFlow.js model...');
+                await this.loadTensorFlowModel();
+            }
+            
+            if (!this.tensorFlowModel) {
+                console.warn('⚠️ TensorFlow model not available, falling back to basic detection');
+                return this.fallbackTrainDetection();
+            }
+            
+            // Load the camera image
+            const tripCheckUrl = 'https://tripcheck.com/RoadCams/cams/12th%20at%20Clinton_pid3177.JPG';
+            
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                
+                img.onload = async () => {
+                    try {
+                        // Use TensorFlow.js for object detection
+                        const predictions = await this.tensorFlowModel.detect(img);
+                        
+                        // Look for train-related objects
+                        const trainObjects = predictions.filter(pred => 
+                            pred.class === 'train' || 
+                            pred.class === 'locomotive' ||
+                            pred.class === 'car' || // Trains often detected as cars
+                            pred.class === 'truck' || // Freight cars might be detected as trucks
+                            pred.class === 'bus' // Some train cars might be detected as buses
+                        );
+                        
+                        const hasTrain = trainObjects.length > 0;
+                        
+                        if (hasTrain) {
+                            console.log('🚂 TensorFlow.js detected train objects:', trainObjects.map(obj => `${obj.class} (${Math.round(obj.score * 100)}% confidence)`));
+                        } else {
+                            console.log('✅ TensorFlow.js: No train objects detected');
+                            console.log('📋 Detected objects:', predictions.map(obj => `${obj.class} (${Math.round(obj.score * 100)}% confidence)`));
+                        }
+                        
+                        resolve(hasTrain);
+                        
+                    } catch (error) {
+                        console.error('❌ TensorFlow.js detection error:', error);
+                        console.log('🔄 Falling back to basic detection...');
+                        resolve(this.fallbackTrainDetection());
+                    }
+                };
+                
+                img.onerror = () => {
+                    console.warn('⚠️ Could not load camera image for TensorFlow analysis');
+                    resolve(false);
+                };
+                
+                // Add timestamp to prevent caching
+                img.src = `${tripCheckUrl}?t=${Date.now()}`;
+            });
+            
+        } catch (error) {
+            console.error('❌ Error in TensorFlow CCTV analysis:', error);
+            return this.fallbackTrainDetection();
+        }
+    }
+    
+    async loadTensorFlowModel() {
+        try {
+            // Check if TensorFlow.js and COCO-SSD are available
+            if (typeof cocoSsd === 'undefined') {
+                console.error('❌ COCO-SSD model not loaded');
+                return false;
+            }
+            
+            console.log('📚 Loading COCO-SSD model...');
+            this.tensorFlowModel = await cocoSsd.load();
+            console.log('✅ TensorFlow.js COCO-SSD model loaded successfully');
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Error loading TensorFlow model:', error);
+            this.tensorFlowModel = null;
+            return false;
+            }
+    }
+    
+    fallbackTrainDetection() {
+        try {
+            console.log('🔄 Using fallback train detection...');
             
             // Create a canvas to analyze the camera image
             const canvas = document.createElement('canvas');
@@ -669,7 +773,7 @@ class TrainStatusApp {
             // Load the camera image
             const tripCheckUrl = 'https://tripcheck.com/RoadCams/cams/12th%20at%20Clinton_pid3177.JPG';
             
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 img.crossOrigin = 'anonymous';
                 img.onload = () => {
                     try {
@@ -678,41 +782,36 @@ class TrainStatusApp {
                         
                         // Get image data for analysis
                         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                        const data = imageData.data;
                         
-                        // Simple train detection algorithm
-                        // This analyzes pixel patterns that might indicate a train
-                        const trainDetected = this.detectTrainInImage(data, canvas.width, canvas.height);
+                        // Use the old pixel analysis as fallback
+                        const trainDetected = this.detectTrainInImage(imageData, canvas.width, canvas.height);
                         
-                        console.log('🚂 Train detection result:', trainDetected ? 'TRAIN FOUND' : 'NO TRAIN');
+                        console.log('🔄 Fallback detection result:', trainDetected ? 'TRAIN FOUND' : 'NO TRAIN');
                         resolve(trainDetected);
                         
                     } catch (error) {
-                        console.error('Error analyzing image data:', error);
-                        resolve(false); // Default to no train if analysis fails
+                        console.error('❌ Fallback detection error:', error);
+                        resolve(false);
                     }
                 };
                 
                 img.onerror = () => {
-                    console.warn('⚠️ Could not load camera image for analysis');
-                    resolve(false); // Default to no train if image fails to load
+                    console.warn('⚠️ Could not load camera image for fallback analysis');
+                    resolve(false);
                 };
                 
-                // Add timestamp to prevent caching
                 img.src = `${tripCheckUrl}?t=${Date.now()}`;
             });
             
         } catch (error) {
-            console.error('❌ Error in CCTV analysis:', error);
-            return false; // Default to no train if analysis fails
+            console.error('❌ Fallback detection failed:', error);
+            return false;
         }
     }
     
     detectTrainInImage(imageData, width, height) {
         try {
-            // This is a simplified train detection algorithm
-            // In a production app, you would use a proper computer vision model
-            
+            // This is a simplified train detection algorithm as fallback
             let darkPixelCount = 0;
             let totalPixels = width * height;
             
@@ -732,15 +831,14 @@ class TrainStatusApp {
             const darkPixelPercentage = (darkPixelCount / totalPixels) * 100;
             
             // If more than 15% of pixels are dark, it might indicate a train
-            // This is a very basic heuristic and would need refinement
             const trainThreshold = 15;
             
-            console.log(`📊 Image analysis: ${darkPixelPercentage.toFixed(2)}% dark pixels (threshold: ${trainThreshold}%)`);
+            console.log(`📊 Fallback analysis: ${darkPixelPercentage.toFixed(2)}% dark pixels (threshold: ${trainThreshold}%)`);
             
             return darkPixelPercentage > trainThreshold;
             
         } catch (error) {
-            console.error('Error in train detection algorithm:', error);
+            console.error('❌ Fallback algorithm error:', error);
             return false;
         }
     }
@@ -779,12 +877,22 @@ class TrainStatusApp {
             }));
         }
         
-
-        
-        // Update modal status if it's open
+        // Update modal status if it's open with specific messages
         const modalStatus = document.getElementById('modal-status');
         if (modalStatus) {
-            modalStatus.textContent = text;
+            let statusMessage = 'Unknown';
+            
+            if (status === 'blocked') {
+                statusMessage = 'Train Detected';
+            } else if (status === 'clear') {
+                statusMessage = 'No Train Detected';
+            } else if (status === 'checking') {
+                statusMessage = 'Checking...';
+            } else if (status === 'error') {
+                statusMessage = 'Error';
+            }
+            
+            modalStatus.textContent = statusMessage;
         }
     }
     
