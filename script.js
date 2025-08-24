@@ -422,12 +422,24 @@ class TrainStatusApp {
     }
     
     createMaxTrainMarker(train) {
+        // Determine arrow direction based on train direction
+        let arrowDirection = '→'; // Default right arrow
+        let arrowClass = 'eastbound';
+        
+        if (train.direction.toLowerCase().includes('west') || 
+            train.direction.toLowerCase().includes('westbound') ||
+            train.direction === '1' || train.direction === '3' || 
+            train.direction === '5' || train.direction === '7' ||
+            train.direction === '9' || train.direction === '11') {
+            arrowDirection = '←'; // Left arrow for westbound
+            arrowClass = 'westbound';
+        }
+        
         const trainIcon = L.divIcon({
             className: 'max-train-marker',
             html: `
-                <div class="train-marker" style="background: ${train.color}; border-color: ${train.color};">
-                    <div class="train-line">${train.line}</div>
-                    <div class="train-direction">${train.direction}</div>
+                <div class="train-marker ${arrowClass}" style="background: ${train.color}; border-color: ${train.color};">
+                    <div class="train-arrow">${arrowDirection}</div>
                 </div>
             `,
             iconSize: [40, 40],
