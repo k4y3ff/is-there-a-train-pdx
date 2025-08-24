@@ -442,8 +442,8 @@ class TrainStatusApp {
                     <div class="train-arrow">${arrowDirection}</div>
                 </div>
             `,
-            iconSize: [40, 40],
-            iconAnchor: [20, 20]
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
         });
         
         const marker = L.marker([train.lat, train.lng], { icon: trainIcon });
